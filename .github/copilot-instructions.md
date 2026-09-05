@@ -1,6 +1,6 @@
 # Repository instructions
 
-Stack: .NET 9, ASP.NET Core, .NET Aspire orchestration, EF Core, MediatR.
+Stack: .NET 10, ASP.NET Core, .NET Aspire orchestration, EF Core, MediatR.
 Architecture: service-per-bounded-context under `src/`, integration via
 an event bus. Ordering is a DDD service; Catalog and Basket are simpler
 data-driven services.
