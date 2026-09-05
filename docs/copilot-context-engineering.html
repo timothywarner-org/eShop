@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speaking Copilot's Language: Context Engineering Reference</title>
+<style>
+  :root {
+    --paper:   #EDF0F4;
+    --surface: #FFFFFF;
+    --ink:     #1B2430;
+    --ink-mid: #4A5A6E;
+    --ink-soft:#6B7A8D;
+    --rule:    #C3CCD8;
+    --accent:  #10556B;
+    --accent-bg:#E4EDF1;
+    --caution: #A8620E;
+    --caution-bg:#FDF1E2;
+    --caution-ink:#6B4A18;
+    --sans: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --mono: "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.6;
+  }
+
+  .sheet {
+    max-width: 62rem;
+    margin: 0 auto;
+    padding: 3.5rem 2rem 5rem;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 1.75rem; margin-bottom: 2.5rem; }
+
+  h1 {
+    font-size: 2.1rem;
+    line-height: 1.2;
+    font-weight: 600;
+    margin: 0 0 0.6rem;
+    letter-spacing: -0.015em;
+  }
+
+  .thesis { font-size: 1.15rem; color: var(--ink-mid); margin: 0 0 1.25rem; max-width: 48rem; }
+
+  .meta { font-family: var(--mono); font-size: 0.82rem; color: var(--ink-soft); line-height: 1.9; }
+  .meta a { color: var(--accent); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--accent); }
+  .meta a:hover { background: var(--accent-bg); }
+  .meta a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- sections ---------- */
+  section { margin: 3rem 0 0; }
+
+  h2 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin: 0 0 0.4rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 2rem 0 0.35rem; }
+
+  .lede { color: var(--ink-mid); margin: 0.6rem 0 1.5rem; max-width: 46rem; }
+
+  p { max-width: 46rem; }
+
+  /* path headings: the path IS the identity of the artifact */
+  .path {
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-bg);
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    border-left: 3px solid var(--accent);
+    margin: 2.25rem 0 0.5rem;
+    word-break: break-all;
+  }
+
+  .tier-note { font-size: 0.92rem; color: var(--ink-soft); margin: 0 0 0.9rem; max-width: 46rem; }
+
+  /* ---------- tables ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 1.25rem 0 0; font-size: 0.95rem; }
+
+  th {
+    text-align: left;
+    font-weight: 600;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 2px solid var(--ink);
+    vertical-align: bottom;
+  }
+
+  td { padding: 0.7rem 0.75rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+
+  td.mono, th.mono { font-family: var(--mono); font-size: 0.86rem; }
+
+  tr.charged td { background: var(--caution-bg); }
+  .rank { display: block; font-size: 0.8rem; font-weight: 400; color: var(--ink-soft); margin-top: 0.15rem; }
+
+  /* "3. Organization" otherwise wraps onto two lines and the scope names stop
+     reading as a numbered sequence. Only above 640px: on a phone the table
+     switches to a fixed layout and a nowrap column would push the page sideways. */
+  @media (min-width: 641px) {
+    .scopes td:first-child { white-space: nowrap; }
+  }
+
+  /* ---------- code blocks ---------- */
+  figure { margin: 0 0 0.5rem; position: relative; }
+
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--ink);
+    margin: 0;
+    padding: 1.1rem 1.2rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.84rem;
+    line-height: 1.65;
+    tab-size: 2;
+  }
+
+  .copy {
+    position: absolute;
+    top: 0.55rem;
+    right: 0.55rem;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    padding: 0.25rem 0.6rem;
+    cursor: pointer;
+  }
+
+  .copy:hover { background: var(--accent-bg); }
+  .copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .copy[data-done="yes"] { color: var(--surface); background: var(--accent); }
+
+  /* ---------- callouts ---------- */
+  .caution {
+    background: var(--caution-bg);
+    border: 1px solid var(--caution);
+    border-left: 4px solid var(--caution);
+    padding: 1rem 1.2rem;
+    margin: 1.5rem 0;
+    max-width: 46rem;
+  }
+
+  .caution p { margin: 0; color: var(--caution-ink); }
+  .caution p + p { margin-top: 0.6rem; }
+  .caution strong { color: var(--caution); }
+
+  /* ---------- two-column compare ---------- */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 1.25rem 0 0; border: 1px solid var(--rule); }
+  .compare > div { padding: 1.1rem 1.25rem; background: var(--surface); }
+  .compare > div + div { border-left: 1px solid var(--rule); }
+  .compare h4 { font-family: var(--mono); font-size: 0.88rem; margin: 0 0 0.5rem; color: var(--accent); }
+  .compare p { margin: 0; font-size: 0.95rem; }
+  .compare .verdict { margin-top: 0.7rem; font-weight: 600; color: var(--ink); }
+
+  ul, ol { max-width: 46rem; padding-left: 1.4rem; }
+  li { margin-bottom: 0.5rem; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--accent-bg);
+    padding: 0.1rem 0.3rem;
+    border-radius: 2px;
+  }
+
+  /* ---------- footer ---------- */
+  footer { margin-top: 4rem; padding-top: 1.75rem; border-top: 3px solid var(--ink); }
+  footer p { font-size: 0.95rem; color: var(--ink-mid); }
+  footer a { color: var(--accent); }
+  .sig { font-family: var(--mono); font-size: 0.82rem; color: var(--ink-soft); line-height: 1.9; margin-top: 1.5rem; }
+
+  /* Sources list. Long doc URLs have no natural break opportunity, so they must be
+     allowed to break or they set a floor wider than a phone screen. */
+  .sources { list-style: none; padding-left: 0; margin: 1.25rem 0 0; }
+  .sources li { margin-bottom: 0.85rem; overflow-wrap: anywhere; }
+  .sources a { color: var(--accent); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--accent); }
+  .sources a:hover { background: var(--accent-bg); }
+  .sources a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sources .claim { display: block; color: var(--ink-mid); font-size: 0.92rem; margin-top: 0.15rem; }
+  .stamp { font-family: var(--mono); font-size: 0.8rem; color: var(--ink-soft); }
+
+  /* ---------- table of contents ---------- */
+  /* Two columns on a desktop, one on a phone. This sheet is read next to an
+     open editor, so the whole map has to fit above the first section instead
+     of forcing a scroll to find out what is in here. */
+  .toc {
+    margin: 0 0 2.5rem;
+    padding: 1.1rem 1.35rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--accent);
+  }
+  .toc h2 {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: none;
+    padding-bottom: 0;
+    margin: 0 0 0.7rem;
+  }
+  .toc ol { columns: 2; column-gap: 2.5rem; margin: 0; padding-left: 1.35rem; }
+  .toc li { break-inside: avoid; margin-bottom: 0.35rem; }
+  /* Underline, not hue. A link that reads as a link only because it is teal
+     is invisible to a red/green colorblind reader on a bad monitor. */
+  .toc a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--rule); }
+  .toc a:hover { background: var(--accent-bg); border-bottom-color: var(--accent); }
+  .toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Without this the jumped-to heading sits flush against the top edge and
+     reads as though the section above it is missing. */
+  section[id] { scroll-margin-top: 1.5rem; }
+
+  /* ---------- back to top ---------- */
+  .totop { margin: 1.75rem 0 0; text-align: right; font-size: 0.82rem; }
+  .totop a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px solid var(--rule); }
+  .totop a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .totop a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (max-width: 640px) {
+    .sheet { padding: 2rem 1.1rem 3rem; }
+    h1 { font-size: 1.6rem; }
+    .compare { grid-template-columns: 1fr; }
+    .toc ol { columns: 1; }
+    .compare > div + div { border-left: none; border-top: 1px solid var(--rule); }
+    table { font-size: 0.88rem; table-layout: fixed; }
+    th, td { padding-left: 0.45rem; padding-right: 0.45rem; }
+    /* Mono paths have no natural break opportunity, so without this the tier
+       table sets a floor wider than the phone and the whole page scrolls
+       sideways. Breaking inside a path is ugly; a sideways-scrolling page is
+       unusable. */
+    td.mono, th.mono { overflow-wrap: anywhere; word-break: break-word; }
+  }
+
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    .sheet { max-width: none; padding: 0; }
+    .copy { display: none; }
+    /* Paper has no back button, so the return links are dead weight. The rule
+       below them prints as "(#tier-2)" without the second line, because the
+       general a::after rule appends every href. */
+    .totop { display: none; }
+    a[href^="#"]::after { content: none; }
+    .toc { break-inside: avoid; border-left-width: 2px; }
+    pre, .caution, .compare > div { background: #fff; }
+    /* On screen a long line scrolls inside the block. Paper has no scrollbar,
+       so overflow-x:auto silently truncates instead. At 1in margins that cost
+       95px off the applyTo glob line, which is the line readers most need.
+       pre-wrap keeps the leading indentation that YAML frontmatter depends on. */
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: visible; }
+    section { page-break-inside: avoid; }
+    h2 { page-break-after: avoid; }
+    figure { page-break-inside: avoid; }
+    a::after { content: " (" attr(href) ")"; font-size: 9pt; color: #555; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<header class="masthead" id="top">
+  <h1>Speaking Copilot's Language</h1>
+  <p class="thesis">GitHub Copilot doesn't read your repository. It retrieves from it, and everything it
+  retrieves competes for the same finite context window as your prompt, your open files, and your chat
+  history. This sheet holds every file we built during the session, ready to copy.</p>
+  <p class="meta">
+    Developer Forum &middot; September 9, 2026<br>
+    Tim Warner &middot; Principal Staff Author, Pluralsight &middot; Microsoft MVP<br>
+    <a href="https://techtrainertim.com">TechTrainerTim.com</a> &middot; <a href="https://www.pluralsight.com/authors/tim-warner">Pluralsight author page</a><br>
+    Demo repository: dotnet/eShop &middot; .NET 9 + Aspire &middot; 18 projects
+  </p>
+</header>
+
+<!-- ============================================================ -->
+<nav class="toc" aria-labelledby="toc-heading">
+  <h2 id="toc-heading">On this sheet</h2>
+  <ol>
+    <li><a href="#scopes">Three scopes and their paths</a></li>
+    <li><a href="#four-tiers">What separates the four tiers</a></li>
+    <li><a href="#tier-1">Tier 1: always loaded</a></li>
+    <li><a href="#tier-2">Tier 2: conditionally loaded</a></li>
+    <li><a href="#tier-3">Tier 3: invoked on request</a></li>
+    <li><a href="#tier-4">Tier 4: loaded on relevance</a></li>
+    <li><a href="#spaces">Copilot Spaces</a></li>
+    <li><a href="#big-repo">When the monorepo is too big</a></li>
+    <li><a href="#budget">Spend the budget on purpose</a></li>
+    <li><a href="#diagnose">Diagnose from the References list</a></li>
+    <li><a href="#cli-context">Read the budget with /context</a></li>
+    <li><a href="#measuring">Measuring adoption</a></li>
+    <li><a href="#going-further">Going further</a></li>
+    <li><a href="#sources">Sources</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================ -->
+<section id="scopes">
+  <h2>Three scopes, and which paths belong to each</h2>
+  <p class="lede">Settle the geography before the tiers. The same paragraph of instruction text does a
+  different job depending on whether you keep it in your own profile, commit it to the repository, or
+  set it once for the whole organization. GitHub and VS Code document the same order of priority, and
+  it runs from personal down to organization.</p>
+
+  <table class="scopes">
+    <thead>
+      <tr>
+        <th>Scope</th>
+        <th class="mono">Where it goes</th>
+        <th>Who it reaches</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Personal</strong><span class="rank">Highest priority</span></td>
+        <td class="mono">~/.copilot/instructions<br>~/.claude/rules</td>
+        <td>Only you, in every workspace on the machine. Create one with the
+          <strong>Chat: New Instructions File</strong> command. Settings Sync carries these between
+          machines if you select <strong>Prompts and Instructions</strong> in
+          <strong>Settings Sync: Configure</strong>.</td>
+      </tr>
+      <tr>
+        <td><strong>2. Repository</strong><span class="rank">Middle priority</span></td>
+        <td class="mono">.github/copilot-instructions.md<br>.github/instructions/*.instructions.md<br>.github/prompts/*.prompt.md<br>AGENTS.md</td>
+        <td>Everyone who clones the repository, reviewed in pull requests like any other code. This is
+          the scope the rest of this sheet is about, because it's the only one that survives a
+          new hire.</td>
+      </tr>
+      <tr>
+        <td><strong>3. Organization</strong><span class="rank">Lowest priority</span></td>
+        <td>Set by organization owners in the organization's Copilot settings on GitHub.com. Requires
+          Copilot Business or Copilot Enterprise.</td>
+        <td>Every member of the organization, on Copilot Chat and Copilot code review on GitHub.com.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>A folder isn't a fourth scope. It's a property of the file. A tier 2 file scopes itself with its
+  <code>applyTo</code> glob, which is the supported way to say <em>this applies to the payments folder
+  and nothing else</em>. VS Code will also read nested <code>AGENTS.md</code> files in subfolders when
+  <code>chat.useNestedAgentsMdFiles</code> is enabled, and the documentation marks that setting
+  experimental, so don't write a standard around it yet.</p>
+
+  <div class="caution">
+    <p><strong>The precedence you just read is by scope, not by file.</strong> Personal beats
+    repository, and repository beats organization. Inside one repository it's a different story: VS
+    Code documents that it combines the instruction files it finds and that no specific order is
+    guaranteed. So don't write two repository files that contradict each other and expect a tiebreak.
+    Write them so they compose.</p>
+  </div>
+  <div class="caution">
+    <p><strong>If you also run Claude Code, this order is upside down from the one you know.</strong>
+    Claude Code puts managed organization settings at the top of its precedence list, above the
+    command line, above the project, above the user. Copilot does the reverse: personal wins,
+    organization loses. An administrator who expects an organization-level instruction to be the
+    final word will be right in one of these two products and wrong in the other, so establish which
+    product you are arguing about before you argue about whose rule applies.</p>
+  </div>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+<!-- ============================================================ -->
+<section id="four-tiers">
+  <h2>The only thing that distinguishes the four tiers is when content enters the window</h2>
+  <p class="lede">Every artifact below does the same job: it tells Copilot what you care about. What
+  separates them is <strong>when they get charged against your budget</strong>. Get this straight and
+  the rest of the sheet is obvious.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tier</th>
+        <th class="mono">Where it goes</th>
+        <th>Enters the window when</th>
+        <th>What it costs you</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="charged">
+        <td><strong>1. Always</strong></td>
+        <td class="mono">.github/copilot-instructions.md<br>AGENTS.md</td>
+        <td>Every request in the repository, no exceptions</td>
+        <td><strong>Charged every time.</strong> Keep these short or they become a tax.</td>
+      </tr>
+      <tr>
+        <td><strong>2. Conditionally</strong></td>
+        <td class="mono">.github/instructions/<br>&nbsp;&nbsp;*.instructions.md</td>
+        <td>The <code>applyTo</code> glob matches a file in scope</td>
+        <td>Nothing until you're in that part of the tree. Start here.</td>
+      </tr>
+      <tr>
+        <td><strong>3. On request</strong></td>
+        <td class="mono">.github/prompts/<br>&nbsp;&nbsp;*.prompt.md</td>
+        <td>You type <code>/name</code> in chat</td>
+        <td>Nothing until invoked. Turns folklore into a command.</td>
+      </tr>
+      <tr>
+        <td><strong>4. On relevance</strong></td>
+        <td class="mono">.github/skills/&lt;name&gt;/<br>&nbsp;&nbsp;SKILL.md</td>
+        <td>The agent reads your description and decides it applies</td>
+        <td>Nothing until it loads. The description does the work.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="caution">
+    <p><strong>The mistake that costs the most:</strong> growing
+    <code>copilot-instructions.md</code> into four hundred lines of coding standards. Every word in a
+    tier-1 file displaces retrieved code on <em>every single request</em>, including the requests where
+    those standards are irrelevant. If it wouldn't survive being read aloud, move it to tier 2.</p>
+  </div>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="tier-1">
+  <h2>Tier 1: always loaded</h2>
+  <p class="lede">Two files, both repository-wide. Between them, keep the total under roughly a page.</p>
+
+  <p class="path">.github/copilot-instructions.md</p>
+  <p class="tier-note">Applies to every Copilot Chat request in this repository.</p>
+  <figure>
+    <button class="copy" type="button">Copy</button>
+<pre>
+# Repository instructions
+
+Stack: .NET 9, ASP.NET Core, .NET Aspire orchestration, EF Core, MediatR.
+Architecture: service-per-bounded-context under `src/`, integration via
+an event bus. Ordering is a DDD service; Catalog and Basket are simpler
+data-driven services.
+
+When explaining any cross-service flow:
+- Name every service the flow touches, in order.
+- Surface any `REVIEW`, `TODO`, `HACK`, or `FIXME` comment you find in
+  the files involved. Quote it. Do not summarize it away.
+- Say explicitly when correctness depends on the order of side effects.
+
+When you cannot find something, say so and name what you searched.
+Do not infer the existence of a class or method you have not seen.
+</pre>
+  </figure>
+
+  <p class="path">AGENTS.md</p>
+  <p class="tier-note">Repository root. Read by VS Code, by coding agents, and by Copilot code review
+  (generally available since June 18, 2026), so conventions written here also shape the review comments
+  on your pull requests.</p>
+  <figure>
+    <button class="copy" type="button">Copy</button>
+<pre>
+# AGENTS.md
+
+## Build and test
+- Build:   `dotnet build eShop.Web.slnf`
+- Test:    `dotnet test`
+- Run:     `dotnet run --project src/eShop.AppHost/eShop.AppHost.csproj`
+- Docker must be running before the AppHost starts.
+
+## Conventions
+- Domain logic belongs in `*.Domain`. Never reach into a DbContext
+  from an API endpoint.
+- Integration events are contracts. Changing one is a breaking change
+  to every subscriber; call that out rather than editing quietly.
+- Migrations are generated, never hand-edited.
+
+## Do not touch
+- Generated migration files under `*/Migrations/`.
+- `eShop.ServiceDefaults` without flagging the cross-cutting impact.
+</pre>
+  </figure>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="tier-2">
+  <h2>Tier 2: conditionally loaded, and the one to build first</h2>
+  <p class="lede">The <code>applyTo</code> glob is what makes this tier free. Instructions for the
+  ordering service cost you nothing while you're working in catalog. This is also how the technique
+  survives on a small repository: scope by layer or by language instead of by service.</p>
+
+  <p class="path">.github/instructions/ordering.instructions.md</p>
+  <figure>
+    <button class="copy" type="button">Copy</button>
+<pre>
+---
+applyTo: "src/Ordering.API/**,src/Ordering.Domain/**,src/Ordering.Infrastructure/**"
+---
+
+# Ordering service instructions
+
+This is a Domain-Driven Design service. Aggregates own their invariants;
+command handlers orchestrate but do not contain business rules.
+
+Domain events dispatch through MediatR inside `OrderingContext`, and
+they run in the same transaction as `SaveChanges`. That has consequences:
+
+- Anything that depends on a database-generated Id being populated is
+  fragile. Flag it every time you see it.
+- If a handler yields before `SaveChanges` completes, ordering guarantees
+  you may be assuming do not hold.
+
+When asked to explain or modify an ordering flow, always report:
+1. The command, the aggregate, and the handlers involved.
+2. Every point where correctness depends on execution order.
+3. Any existing `REVIEW` or `TODO` comment in the files you touched.
+</pre>
+  </figure>
+
+  <p class="path">.github/instructions/tests.instructions.md</p>
+  <figure>
+    <button class="copy" type="button">Copy</button>
+<pre>
+---
+applyTo: "tests/**"
+---
+
+# Test instructions
+
+- xUnit. One assert concept per test; multiple assertions are fine when
+  they describe the same fact.
+- Name tests `Method_Scenario_ExpectedOutcome`.
+- Unit tests never touch a database or a container. If a test needs
+  either, it belongs in a `*.FunctionalTests` project instead.
+- Do not write a test that passes by asserting on a mock you configured
+  in the same test.
+</pre>
+  </figure>
+
+  <div class="caution">
+    <p><strong>Verify scope before you trust it.</strong> Open a file inside the glob and confirm the
+    instructions are in play, then open one outside it and confirm they aren't. A glob that silently
+    matches nothing looks identical to a glob that works.</p>
+  </div>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="tier-3">
+  <h2>Tier 3: invoked on request</h2>
+  <p class="lede">A prompt file turns your best engineer's diagnostic method into something a new hire
+  can run on day one. Invoke with <code>/trace-flow</code>.</p>
+
+  <p class="path">.github/prompts/trace-flow.prompt.md</p>
+  <figure>
+    <button class="copy" type="button">Copy</button>
+<pre>
+---
+agent: agent
+description: Trace a request across service boundaries and report every
+  place correctness depends on execution order.
+---
+
+Trace the flow I name below from entry point to final side effect.
+
+Produce exactly these sections:
+
+## Path
+Each hop in order: service, file, method. One line per hop.
+
+## Boundaries
+Every service-to-service or process-to-process transition, and what
+carries the data across it.
+
+## Order dependencies
+Every point where correctness depends on the sequence of side effects,
+on a database-generated value being populated, or on a transaction
+boundary. For each one, state what breaks if the order changes.
+
+## Existing warnings
+Quote verbatim every `REVIEW`, `TODO`, `HACK`, or `FIXME` comment in
+any file on this path. If there are none, say so explicitly.
+
+## What I could not determine
+Name what you looked for and did not find. Do not guess.
+
+Flow to trace:
+</pre>
+  </figure>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="tier-4">
+  <h2>Tier 4: loaded on relevance</h2>
+  <p class="lede">Agent Skills went generally available in Copilot code review on July 29, 2026, so a
+  skill you write for chat also acts as a reviewer on your pull requests. The
+  <code>description</code> field is the whole game: it's what the agent reads to decide whether to load
+  the skill at all.</p>
+
+  <p class="path">.github/skills/order-flow-audit/SKILL.md</p>
+  <figure>
+    <button class="copy" type="button">Copy</button>
+<pre>
+---
+name: order-flow-audit
+description: Audit a change to the ordering service for order-of-side-effect
+  hazards, transaction boundary violations, and integration event contract
+  breaks. Use whenever code under src/Ordering.* is added, modified, or
+  reviewed, or when asked how an order flows through the system.
+---
+
+# Order flow audit
+
+## When this applies
+Any change touching `src/Ordering.API`, `src/Ordering.Domain`, or
+`src/Ordering.Infrastructure`, and any question about how an order
+moves through the system.
+
+## What to check
+
+1. **Side effect ordering.** Does anything depend on a database-generated
+   value being populated before it is read? Domain events dispatch inside
+   the same transaction as `SaveChanges`, so this is the highest-frequency
+   defect in this service.
+
+2. **Transaction boundaries.** Does a handler perform work that must
+   either commit with the aggregate or not at all? If it crosses the
+   boundary, say what compensating action exists, or that none does.
+
+3. **Integration event contracts.** Any change to an event shape is a
+   breaking change to every subscriber. Enumerate the subscribers.
+
+4. **Existing warnings.** Quote any `REVIEW` or `TODO` comment in the
+   files under review. These are prior engineers telling you where the
+   fragility is.
+
+## How to report
+Lead with the highest-severity finding. For each finding, give the file,
+the mechanism, and what breaks in production. Do not soften a real hazard
+into a style suggestion.
+</pre>
+  </figure>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="spaces">
+  <h2>Copilot Spaces: the distinction that's expensive to get wrong</h2>
+  <p class="lede">Spaces bring in what your team knows but never committed to the repository: wikis,
+  Markdown, decision records, specs. How you attach a source decides what it costs.</p>
+
+  <div class="compare">
+    <div>
+      <h4>Attach a whole repository</h4>
+      <p>Content is searched selectively and retrieved on demand. It costs you only when the retrieval
+      step decides it's relevant.</p>
+      <p class="verdict">Use for: everything you might need.</p>
+    </div>
+    <div>
+      <h4>Attach individual files</h4>
+      <p>That content is in play on every query against the Space, whether it helps or not. Same
+      economics as a tier-1 instruction file.</p>
+      <p class="verdict">Use for: the few documents that should always be true.</p>
+    </div>
+  </div>
+
+  <p style="margin-top:1.25rem">GitHub is explicit that not everything in a Space is necessarily used
+  for every answer, so treat a Space as a curated candidate pool rather than a guarantee.</p>
+
+  <div class="caution">
+    <p><strong>Check the date on your internal guidance.</strong> Copilot knowledge bases were retired
+    on November 1, 2025 and replaced by Copilot Spaces, with a conversion path for existing ones. If a
+    runbook or onboarding doc still tells your team to create a knowledge base, that document is more
+    than a year stale and worth an owner.</p>
+  </div>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="big-repo">
+  <h2>&ldquo;This monorepo is too big to understand in one bite&rdquo;</h2>
+  <p class="lede">Check which index Copilot is using before you change anything else. A workspace over
+  2,500 indexable files falls back to a basic index that searches with simpler algorithms, and the
+  fallback is silent. That one fact accounts for more weak monorepo answers than model choice, prompt
+  wording, and instruction files put together.</p>
+
+  <p>A large repository doesn't slow Copilot down in any way you can feel. What it does is lower the
+  odds that the retrieval step hands back the five files your question actually needed. Same model,
+  same latency, worse hit rate. So a conversation that opens with <em>let's go evaluate something
+  else</em> is solving for the wrong variable, and it'll cost you a quarter before anyone notices.</p>
+
+  <h3>Which index you are actually on</h3>
+  <p>VS Code selects the index by counting indexable files in the workspace, and the Copilot status
+  dashboard in the Status Bar reports which one you got. Open it on your own monorepo before the
+  first slide of any internal enablement session. The room goes quiet.</p>
+
+  <table>
+    <thead>
+      <tr><th>Index</th><th>How you get it</th><th>What it gives you</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="mono">Remote</td>
+        <td>Run <span class="mono">GitHub Copilot: Build Remote Workspace Index</span> from the
+        Command Palette. Needs a git remote on GitHub. Once per repository.</td>
+        <td>Semantic search that holds up on large codebases. GitHub refreshes it as you push.</td>
+      </tr>
+      <tr>
+        <td class="mono">Local</td>
+        <td>Automatic under 750 indexable files. Between 750 and 2,500, run
+        <span class="mono">Build local workspace index</span> once.</td>
+        <td>Fast, high quality, stored on your machine. The ceiling is 2,500 indexable files.</td>
+      </tr>
+      <tr class="charged">
+        <td class="mono">Basic</td>
+        <td>What you get past 2,500 files when no remote index exists.</td>
+        <td><strong>Simpler search algorithms.</strong> Nobody chose this. It is where most
+        monorepos sit, and it is the answer to &ldquo;why is Copilot worse on our repo.&rdquo;</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Build the remote index and the file-count ceiling stops mattering. The catch worth saying out
+  loud to a monorepo team is the refresh condition: the remote index tracks <em>pushed</em> code on
+  the <em>default branch</em>. A long-lived unpushed branch is invisible to retrieval no matter how
+  good your instruction files are, which is why &ldquo;push regularly&rdquo; is GitHub's own written
+  remedy for stale results.</p>
+
+  <h3>What the index will never see, whatever you write</h3>
+  <p>The remote index is GitHub code search, so code search's exclusion rules are your exclusion
+  rules. These are the ones that land hardest on a monorepo:</p>
+  <ul>
+    <li>Files over 350 KiB, and any file carrying more than one line over 4,096 bytes. Your generated
+    clients, your checked-in bundles, and that one enormous schema file are already gone.</li>
+    <li>Vendored and generated code. Binary files including PDFs. Anything not UTF-8 encoded.</li>
+    <li>Lines over 1,024 characters, which are truncated rather than dropped.</li>
+    <li>Everything outside the default branch.</li>
+  </ul>
+  <p>Mark generated paths with <span class="mono">linguist-generated</span> in a root
+  <span class="mono">.gitattributes</span> so the noise stops competing with your real code for
+  retrieval slots.</p>
+
+  <h3>Give Copilot a smaller room to search in</h3>
+  <p>Every technique here shrinks the candidate set rather than improving the search over it. That is
+  the only lever an application team owns, and it is a stronger one than prompt wording.</p>
+  <ul>
+    <li><strong>Trim <span class="mono">files.exclude</span>.</strong> The Copilot index skips
+    anything excluded by <span class="mono">files.exclude</span> or by
+    <span class="mono">.gitignore</span>. Dropping <span class="mono">dist/</span>,
+    <span class="mono">build/</span>, generated clients, and fixtures can carry a repository back
+    under 2,500 files, which is a change of index tier rather than a tidy-up.</li>
+    <li><strong>Use a multi-root workspace.</strong> This is GitHub's own written recommendation for
+    monorepos: a <span class="mono">.code-workspace</span> file listing the two or three services a
+    developer actually touches gives the agent clear boundaries and cuts the indexable count at the
+    same time.</li>
+    <li><strong>Turn on
+    <span class="mono">chat.useCustomizationsInParentRepositories</span>.</strong> If your developers
+    open <span class="mono">packages/checkout</span> rather than the repository root, instruction
+    discovery breaks silently. This setting is the documented fix, and it is the single most
+    commonly missed setting on this page.</li>
+    <li><strong>Point at files instead of searching for them.</strong> A
+    <span class="mono">#folder</span> or <span class="mono">#file</span> reference beats a semantic
+    search over 200,000 files every time. Teach <span class="mono">#codebase</span> rather than
+    <span class="mono">@workspace</span>, which is ask-mode only and effectively legacy.</li>
+  </ul>
+
+  <h3>Make retrieval deterministic when it matters</h3>
+  <p>Semantic search is a probability. On a repository this size you sometimes want a guarantee, and
+  two tools give you one.</p>
+
+  <div class="compare">
+    <div>
+      <h4>GitHub MCP server, <span class="mono">search_code</span></h4>
+      <p>Full code-search qualifier syntax, so <span class="mono">path:</span>,
+      <span class="mono">filename:</span>, and <span class="mono">language:</span> return exactly
+      what you named. Scope the server with
+      <span class="mono">GITHUB_TOOLSETS="repos,pull_requests,code_security"</span> so its tool
+      definitions don't eat the window they were meant to save.</p>
+      <p class="verdict">Use for: surgical retrieval in a tree you can name.</p>
+    </div>
+    <div>
+      <h4>A curated Copilot Space</h4>
+      <p>Attach the ten to twenty files that define a subsystem as <em>files</em>, so they are in
+      context for every query, and attach the monorepo itself as a <em>repository</em> for search
+      fallback. That combination is the documented way to stop losing the retrieval lottery.</p>
+      <p class="verdict">Use for: a subsystem your team asks about weekly.</p>
+    </div>
+  </div>
+
+  <h3>Work it in this order</h3>
+  <ol>
+    <li><strong>Check the index tier in the Status Bar.</strong> If it says basic, stop here and build
+    the remote index. Nothing else on this list matters until that is done.</li>
+    <li><strong>Open the References list</strong> on the weak answer. That takes ten seconds and it
+    tells you whether retrieval or instruction was the problem.</li>
+    <li><strong>If the right file wasn't retrieved</strong>, narrow the question or write the
+    path-scoped instruction file for that part of the tree.</li>
+    <li><strong>If the budget is the constraint</strong>, close the tabs and start a fresh chat before
+    you change anything structural. That's free and it's immediate.</li>
+    <li><strong>Put the durable knowledge in a Space</strong>, with the handful of always-true
+    documents attached as files rather than as a whole repository.</li>
+  </ol>
+
+  <p><strong>The fair objection, and it deserves a straight answer.</strong> On a repository nobody on
+  the team has read end to end, how are you supposed to write path-scoped instructions for a tree you
+  can't characterize yet? That's a genuine chicken-and-egg and I'm not going to wave it off.</p>
+
+  <p>You don't have to know the codebase first. Make Copilot draw you the map. Point a prompt file at
+  a single flow, tell it to name every service that flow touches in order along with every place
+  correctness depends on execution order, then read the answer against the References list. What it
+  retrieved shows you where the seams are, and what it missed shows you where the instruction layer
+  needs to go. You write that one file, the next question lands better, and then you do it again on
+  the next flow. The characterization and the instruction layer build each other, one flow at a
+  time.</p>
+
+  <div class="caution">
+    <p><strong>Two questions to stop asking of a large repository.</strong> GitHub documents that
+    Copilot cannot do comprehensive analysis across a codebase, naming
+    <em>&ldquo;how many times is this function invoked?&rdquo;</em> and
+    <em>&ldquo;rectify all bugs in this project&rdquo;</em> as examples, and it cannot answer
+    questions about information outside the code such as who contributed to a file. These are exactly
+    the questions people try first on a monorepo, they fail quietly rather than loudly, and the
+    failure gets blamed on the model.</p>
+  </div>
+
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="budget">
+  <h2>Spend the budget on purpose</h2>
+  <p class="lede">Three habits, in order of how much they return.</p>
+  <ol>
+    <li><strong>Close the editor tabs you aren't using.</strong> Open files are a line item on every
+    request. That makes this the cheapest correction on the list.</li>
+    <li><strong>Start a new chat when the topic changes.</strong> History accumulates every turn, and
+    an old thread spends your budget on a problem you already solved.</li>
+    <li><strong>Keep tier-1 files short enough to read aloud.</strong> If you can't, the content belongs
+    in a path-scoped file where it costs nothing until it's relevant.</li>
+  </ol>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="diagnose">
+  <h2>Diagnose from the References list, not the model picker</h2>
+  <p class="lede">When an answer is weak, the useful question is never "which model should I have
+  used." Work this order instead.</p>
+  <ol>
+    <li><strong>Open the References list.</strong> What did it actually retrieve? This answers most
+    questions in ten seconds.</li>
+    <li><strong>Was the right file absent?</strong> Then it's a retrieval problem. Scope the question
+    narrower, or point at the file directly, or write a tier-2 instruction file for that path.</li>
+    <li><strong>Was the right file present and ignored?</strong> Then it's an instruction problem. Tell
+    it what to care about in that part of the tree.</li>
+    <li><strong>Did you commit recently?</strong> The index lags. A file you added minutes ago may not
+    be retrievable yet, and that's an operational fact worth planning around rather than a bug.</li>
+    <li><strong>Only now consider the model.</strong> It's the smallest lever in the room.</li>
+  </ol>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="cli-context">
+  <h2>Read the budget instead of arguing about it</h2>
+  <p class="lede">Everything on this sheet rests on one claim: context is a finite budget and you are
+  already spending it. GitHub Copilot CLI will print that budget on request, which turns the claim into
+  a receipt. If one engineer on your team stays skeptical, this is the fastest way to settle it.</p>
+
+  <p>The <code>/context</code> command reports the active model and the tokens in use against that
+  model's total capacity, itemized:</p>
+
+  <table>
+    <thead>
+      <tr><th class="mono">Line item</th><th>What it tells you</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">System Prompt</td><td>Fixed overhead. You don't control it.</td></tr>
+      <tr class="charged"><td class="mono">Custom Instructions</td><td><strong>The files on this sheet.</strong> Your instruction layer is billed on its own line, separately from the conversation.</td></tr>
+      <tr><td class="mono">System Tools</td><td>Tool definitions are charged whether or not you call them.</td></tr>
+      <tr><td class="mono">MCP Tools</td><td>Same rule, for anything you connected yourself.</td></tr>
+      <tr><td class="mono">Messages</td><td>Your turns, the responses, and every tool call and result. This is the line that grows.</td></tr>
+      <tr><td class="mono">Free Space</td><td>What's left to work with.</td></tr>
+      <tr><td class="mono">Buffer</td><td>Held back on purpose. See below.</td></tr>
+    </tbody>
+  </table>
+
+  <p>At roughly <strong>80 percent</strong> of capacity the CLI starts compacting in the background and
+  holds back a buffer of roughly <strong>20 percent</strong> so tool calls can keep running while it
+  works. If usage reaches about <strong>95 percent</strong> before compaction finishes, it pauses and
+  waits. <code>/compact</code> does the same job on demand: it summarizes the conversation and replaces
+  the history with that summary.</p>
+
+  <div class="caution">
+    <p><strong>Two things to settle before you build on this.</strong> An organization can turn the
+    Copilot CLI off in policy, so confirm your own tenant before you write it into a standard. And
+    compaction is lossy by design, because a summary is smaller than what it replaced. A tight
+    instruction layer spends less of the window in the first place, which pushes that summarization
+    further away.</p>
+  </div>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+<!-- ============================================================ -->
+<section id="measuring">
+  <h2>Measuring adoption without fooling yourself</h2>
+  <p class="lede">The usage dashboard groups your population into adoption-phase cohorts, which beats a
+  seat count. A seat count tells you who holds a license. A cohort tells you who changed how they work.</p>
+
+  <div class="compare">
+    <div>
+      <h4>What the cohorts are good for</h4>
+      <p>Finding where enablement will pay. A team clustered in early phases needs something different
+      from a team that plateaued after the novelty faded.</p>
+    </div>
+    <div>
+      <h4>What they can't see</h4>
+      <p>These numbers can't tell you whether an accepted suggestion was any good, whether your senior
+      engineers quietly stopped using it, or whether someone got genuinely faster rather than generating
+      more code for a colleague to review.</p>
+    </div>
+  </div>
+
+  <p style="margin-top:1.25rem">The pattern worth watching for is what happens after a launch push.
+  A contest or an internal campaign moves the population hard, and then a chunk of it settles back
+  within a quarter. That's normal, and it's also the moment these cohorts start earning their keep,
+  because the people who stayed changed a working habit and the people who drifted were riding the
+  novelty. Aim your next round at that second group with something concrete, like a path-scoped
+  instruction file for the tree they actually work in, rather than another all-hands demo.</p>
+
+  <p>Use the cohorts to aim, then go ask people. The dashboard is a map and it isn't the territory.</p>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="going-further">
+  <h2>Going further</h2>
+  <p class="lede">Everything on this sheet is in the Pluralsight library in longer form, with hands-on
+  labs.</p>
+  <ul>
+    <li><strong>GitHub Copilot learning path</strong> for the full instruction-layer treatment,
+    including organization-wide rollout across many repositories.</li>
+    <li><strong>AI-assisted development paths</strong> for prompt engineering and agentic workflows
+    beyond the editor.</li>
+    <li>Search the library for <em>GitHub Copilot</em> and filter to your role, or ask your Pluralsight
+    customer success manager to map a path to your team's adoption phase.</li>
+    <li>My author page is
+    <a href="https://www.pluralsight.com/authors/tim-warner">pluralsight.com/authors/tim-warner</a>,
+    if you want the rest of the catalog.</li>
+  </ul>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="sources">
+  <h2>Sources</h2>
+  <p class="lede">Every product claim on this sheet traces to one of these. Each link was resolved and
+  checked on <span class="stamp">September 4, 2026</span>. Dates given are GitHub changelog dates. If
+  you are about to repeat one of these claims inside your own organization, click through first,
+  because this surface moves faster than internal documentation does.</p>
+
+  <h3>How the instruction layer is defined</h3>
+  <ul class="sources">
+    <li><a href="https://docs.github.com/en/copilot/concepts/response-customization">Configuring Copilot responses: file types and precedence</a>
+      <span class="claim">Source for the four tiers. Worth reading for the precedence order alone: path-specific instructions rank above repository-wide, and agent instructions rank lowest.</span></li>
+    <li><a href="https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions">Adding repository custom instructions</a>
+      <span class="claim">Source for <code>applyTo</code> glob syntax, including that multiple patterns go in one string separated by commas.</span></li>
+    <li><a href="https://code.visualstudio.com/docs/agent-customization/custom-instructions">VS Code: custom instructions</a>
+      <span class="claim">The editor-side view of the same files, which is where you will actually build them. Also the source for the personal scope paths and for Settings Sync carrying them between machines.</span></li>
+    <li><a href="https://code.visualstudio.com/docs/agent-customization/prompt-files">VS Code: prompt files</a>
+      <span class="claim">Source for prompt-file frontmatter and slash-command invocation.</span></li>
+    <li><a href="https://docs.github.com/en/copilot/concepts/agents/about-agent-skills">About agent skills</a>
+      <span class="claim">Source for the <code>SKILL.md</code> convention and the required <code>name</code> and <code>description</code> frontmatter.</span></li>
+    <li><a href="https://agents.md/">AGENTS.md, the cross-tool convention</a>
+      <span class="claim">Context for why this file isn't Copilot-specific.</span></li>
+  </ul>
+
+  <h3>Scopes, and reading the budget directly</h3>
+  <ul class="sources">
+    <li><a href="https://docs.github.com/en/copilot/concepts/agents/copilot-cli/context-management">Managing context in GitHub Copilot CLI</a>
+      <span class="claim">Source for the <code>/context</code> line items, the 80 percent compaction threshold, the 20 percent buffer, and the 95 percent pause.</span></li>
+    <li><a href="https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference">GitHub Copilot CLI command reference</a>
+      <span class="claim">The full slash-command list, worth checking before you type one on a call.</span></li>
+  </ul>
+
+  <h3>Retrieval, which is the whole argument</h3>
+  <ul class="sources">
+    <li><a href="https://docs.github.com/en/copilot/concepts/context/repository-indexing">Indexing repositories for Copilot</a>
+      <span class="claim">Semantic code search finds code by meaning rather than exact text match. Read this before you blame the model.</span></li>
+      <li><a href="https://code.visualstudio.com/docs/copilot/reference/workspace-context">VS Code: how Copilot understands your workspace</a>
+      <span class="claim">Source for the remote, local, and basic index tiers and for the 750 and 2,500 file thresholds. Note that the rewritten page at /docs/agents/reference/workspace-context omits the numbers, so cite this URL for them and re-check it before you quote a threshold on stage.</span></li>
+      <li><a href="https://docs.github.com/en/search-github/github-code-search/about-github-code-search">About GitHub code search</a>
+      <span class="claim">Source for what the remote index excludes: the 350 KiB file cap, the 4,096-byte line rule, vendored and generated code, and default-branch-only indexing.</span></li>
+      <li><a href="https://code.visualstudio.com/docs/agents/best-practices">VS Code: best practices for using AI</a>
+      <span class="claim">Source for the multi-root workspace recommendation for monorepos, and for preferring explicit file and folder references over whole-codebase search.</span></li>
+      <li><a href="https://code.visualstudio.com/docs/editing/workspaces/multi-root-workspaces">VS Code: multi-root workspaces</a>
+      <span class="claim">The .code-workspace schema, if you are writing one for each service in the tree.</span></li>
+      <li><a href="https://github.com/github/github-mcp-server">github/github-mcp-server</a>
+      <span class="claim">Source for the search_code tool and for GITHUB_TOOLSETS, which is how you keep the server's tool definitions from spending the context window you connected it to save.</span></li>
+    <li><a href="https://docs.github.com/en/copilot/concepts/context/spaces">About Copilot Spaces</a>
+      <span class="claim">Source for the attachment distinction: a repository is searched and retrieved on demand, an attached file is loaded for every query.</span></li>
+    <li><a href="https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces/create-copilot-spaces">Creating Copilot Spaces</a></li>
+  </ul>
+
+  <h3>Dated changes to check your internal guidance against</h3>
+  <ul class="sources">
+    <li><a href="https://github.blog/changelog/2026-07-29-copilot-code-review-agent-skills-and-mcp-now-generally-available/">Agent skills and MCP in code review, generally available</a>
+      <span class="claim">July 29, 2026. A skill you write for chat also reviews your pull requests.</span></li>
+    <li><a href="https://github.blog/changelog/2026-06-18-copilot-code-review-agents-md-support-and-ui-improvements/">AGENTS.md support in code review</a>
+      <span class="claim">June 18, 2026. Read from the repository root.</span></li>
+    <li><a href="https://github.blog/changelog/2026-07-17-copilot-code-review-customization-and-configurability-improvements/">Code review customization and configurability</a>
+      <span class="claim">July 17, 2026. Instructions are read from the pull request head branch rather than the base branch, which changes how you test an instruction change.</span></li>
+    <li><a href="https://github.blog/changelog/2025-11-12-copilot-code-review-and-coding-agent-now-support-agent-specific-instructions/">Agent-specific instructions</a>
+      <span class="claim">November 12, 2025. The <code>excludeAgent</code> property scopes an instructions file away from a given agent.</span></li>
+    <li><a href="https://github.blog/changelog/2025-08-20-sunset-notice-copilot-knowledge-bases/">Sunset notice: knowledge bases</a>
+      <span class="claim">Retired November 1, 2025.</span></li>
+    <li><a href="https://github.blog/changelog/2025-10-17-copilot-knowledge-bases-can-now-be-converted-to-copilot-spaces/">Converting knowledge bases to Spaces</a>
+      <span class="claim">October 17, 2025. The migration path, if you still have one open.</span></li>
+    <li><a href="https://github.blog/changelog/2025-12-18-github-copilot-now-supports-agent-skills/">Copilot supports agent skills</a>
+      <span class="claim">December 18, 2025.</span></li>
+    <li><a href="https://github.blog/changelog/2025-08-13-add-repositories-to-spaces/">Adding whole repositories to Spaces</a>
+      <span class="claim">August 13, 2025.</span></li>
+  </ul>
+
+  <h3>The demo repository</h3>
+  <ul class="sources">
+    <li><a href="https://github.com/dotnet/eShop">dotnet/eShop</a>
+      <span class="claim">The reference application used throughout. Public, so everything shown today is reproducible against it.</span></li>
+  </ul>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<footer>
+  <p>Questions after today are welcome, including the awkward ones about what didn't work in your
+  environment. That feedback is more useful to me than the compliments.</p>
+  <p class="sig">
+    Tim Warner<br>
+    Principal Staff Author, IT Operations &middot; Pluralsight<br>
+    Microsoft MVP &middot; Microsoft Certified Trainer since 1997<br>
+    <a href="https://techtrainertim.com">techtrainertim.com</a><br>
+    <a href="https://www.pluralsight.com/authors/tim-warner">pluralsight.com/authors/tim-warner</a>
+  </p>
+</footer>
+
+</div>
+
+<script>
+  // Copy buttons. No storage, no dependencies, graceful fallback for
+  // browsers where the clipboard API is blocked by policy.
+  document.querySelectorAll(".copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var pre = btn.parentElement.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent.replace(/^\n+/, "").replace(/\n+$/, "\n");
+
+      function done() {
+        btn.textContent = "Copied";
+        btn.setAttribute("data-done", "yes");
+        window.setTimeout(function () {
+          btn.textContent = "Copy";
+          btn.removeAttribute("data-done");
+        }, 1600);
+      }
+
+      function fallback() {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "absolute";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); done(); }
+        catch (e) { btn.textContent = "Select manually"; }
+        document.body.removeChild(ta);
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else {
+        fallback();
+      }
+    });
+  });
+</script>
+</body>
+</html>
