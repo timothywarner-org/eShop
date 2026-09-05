@@ -1,3 +1,109 @@
+# eShop, with a GitHub Copilot context engineering layer
+
+[![Upstream](https://img.shields.io/badge/upstream-dotnet%2FeShop-1f6feb?style=flat-square)](https://github.com/dotnet/eShop)
+[![License](https://img.shields.io/badge/license-MIT-1f6feb?style=flat-square)](LICENSE)
+[![Session](https://img.shields.io/badge/session-Speaking%20Copilot's%20Language-1f6feb?style=flat-square)](docs/copilot-context-engineering.html)
+
+This is a fork of [dotnet/eShop](https://github.com/dotnet/eShop) with one thing added: a
+complete, working **context engineering layer** for GitHub Copilot. Upstream's application code
+is untouched. Everything below is additive, and the original README follows this section.
+
+Copilot does not read your repository. It **retrieves** from it, and everything it retrieves
+competes for the same finite context window as your prompt, your open files, and your chat
+history. The files in this fork are an argument about how to spend that budget deliberately
+instead of accidentally.
+
+## What was added
+
+Four tiers, six files. The only thing separating the tiers is **when the content is charged
+against the context window**.
+
+| Tier | Path | Enters the window when |
+| --- | --- | --- |
+| **1. Always** | `.github/copilot-instructions.md` | Every request in this repository, no exceptions |
+| **1. Always** | `AGENTS.md` | Every request, and also on Copilot code review |
+| **2. Conditionally** | `.github/instructions/ordering.instructions.md` | The `applyTo` glob matches a file under `src/Ordering.*` |
+| **2. Conditionally** | `.github/instructions/tests.instructions.md` | The `applyTo` glob matches a file under `tests/` |
+| **3. On request** | `.github/prompts/trace-flow.prompt.md` | You type `/trace-flow` in chat |
+| **4. On relevance** | `.github/skills/order-flow-audit/SKILL.md` | The agent reads the `description` and decides it applies |
+
+Tiers 2 through 4 cost nothing until they are needed. Tier 1 is charged on every single
+request, including the ones where its content is irrelevant, which is why both tier-1 files
+here are deliberately short. A four-hundred-line `copilot-instructions.md` is a tax you pay
+on every question you will ever ask.
+
+## Why the ordering service
+
+The instruction files, the prompt file, and the skill all converge on one real defect that was
+already in this codebase before the fork. In
+`src/Ordering.API/Application/DomainEventHandlers/ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler.cs`:
+
+```csharp
+// REVIEW: The event this creates needs to be sent after SaveChanges has propagated the buyer Id. It currently only
+// works by coincidence. If we remove HiLo or if anything decides to yield earlier, it will break.
+```
+
+That is the only `REVIEW` comment in the entire `src/Ordering.*` tree, and it documents exactly
+the hazard the layer is built to surface: correctness depending on a database-generated Id being
+populated first. Every artifact here instructs Copilot to quote that comment verbatim rather
+than summarize it away.
+
+Nothing about the demo is synthetic. A prior engineer wrote down where the fragility is, and
+the point of a context engineering layer is that the next person to touch the file gets told.
+
+## Try it in about a minute
+
+1. Clone this fork and open it in **VS Code**.
+2. Build the workspace index first. See the warning below, because this step is not optional here.
+3. Open any file under `src/Ordering.API/` and ask Copilot Chat how an order is placed.
+4. Run `/trace-flow` and name the order placement flow.
+5. Open the **References** list on the answer. What was retrieved tells you whether a weak answer
+   was a retrieval problem or an instruction problem. It answers that question in about ten seconds,
+   and it answers it better than switching models does.
+
+> **Build the index before you judge the results.** This repository has roughly **1,150 tracked
+> files**. VS Code indexes a workspace automatically only below **750** files, and falls back to a
+> basic index using simpler search algorithms above **2,500**. Between those two numbers nothing
+> happens until you act, and the outcome is silent either way. Run
+> **GitHub Copilot: Build Remote Workspace Index** from the Command Palette, then confirm the tier
+> in the Copilot status dashboard in the Status Bar. Evaluating retrieval quality on an unbuilt
+> index is the most common way teams reach a wrong conclusion about Copilot.
+
+## Verifying the layer rather than trusting it
+
+A glob that silently matches nothing is indistinguishable from a glob that works. Both of the
+`applyTo` patterns here were checked against this tree before they were committed:
+
+- `src/Ordering.API`, `src/Ordering.Domain`, and `src/Ordering.Infrastructure` all exist.
+- `tests/` exists, including the `*.FunctionalTests` projects that
+  `tests.instructions.md` distinguishes from unit tests.
+
+Do the same on your own repository. Open a file inside the glob and confirm the instructions are
+in play, then open one outside it and confirm they are not.
+
+## The session sheet
+
+[`docs/copilot-context-engineering.html`](docs/copilot-context-engineering.html) is the full
+reference sheet these files came from, including the three scopes and their precedence, Copilot
+Spaces, reading the context budget with `/context` in Copilot CLI, what the remote index will
+never see whatever you write, and a sourced citation for every product claim.
+
+GitHub serves that file as source rather than as a rendered page. Open it locally, or enable
+**GitHub Pages** on the `docs/` folder to get a shareable URL.
+
+## Relationship to upstream
+
+This fork exists to teach a technique, not to compete with the reference application. It tracks
+[dotnet/eShop](https://github.com/dotnet/eShop) and stays under the same **MIT** license.
+
+- Bugs in the eShop application itself belong **upstream**. Please report them there.
+- Questions about the context engineering layer belong in this repository's **Issues**.
+- Application code here is not modified, so upstream remains the authority on how eShop works.
+
+---
+
+<!-- Upstream dotnet/eShop README follows, unmodified. -->
+
 # eShop Reference Application - "AdventureWorks"
 
 A reference .NET application implementing an e-commerce website using a services-based architecture with [Aspire](https://aspire.dev/).

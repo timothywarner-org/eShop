@@ -1,0 +1,17 @@
+# Issues on a fork are routinely misdirected: someone hits a defect in the upstream
+# application and files it here because this is the clone they happened to have open.
+# These links redirect that traffic before an issue is opened rather than after.
+blank_issues_enabled: true
+
+contact_links:
+  - name: Bug in the eShop application itself
+    url: https://github.com/dotnet/eShop/issues
+    about: This fork adds documentation and Copilot instruction files only, and does not modify application code. Defects in eShop belong upstream.
+
+  - name: Security vulnerability
+    url: https://github.com/timothywarner-org/eShop/security/advisories/new
+    about: Report privately through the Security tab rather than in a public issue. See SECURITY.md for which repository to use.
+
+  - name: Context engineering reference sheet
+    url: https://github.com/timothywarner-org/eShop/blob/main/docs/copilot-context-engineering.html
+    about: The full reference behind the instruction files in this fork, with a cited source for every product claim.
