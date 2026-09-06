@@ -17,12 +17,20 @@
 - Generated migration files under `*/Migrations/`.
 - `eShop.ServiceDefaults` without flagging the cross-cutting impact.
 
+## Codebase navigation
+- For an unfamiliar business flow, read `docs/repo-map.md` for entry points,
+  then verify the relevant relationships in source. The map can become stale.
+- When preserving a finding, keep its evidence and the reasoning rule that
+  should guide the next investigation. State the rule's scope and why it matters;
+  do not turn an untested hypothesis into a permanent instruction.
+
 ## Lesson sources
 - This repository is the canonical student and demo source for the lesson.
 - Keep instructor scripts, cue sheets, private diagrams, and rehearsal
   material outside this repository. Do not commit or push them to origin.
-- Maintain the student journey in `README.md` and the leave-behind in
-  `docs/copilot-context-engineering.html`. Distributed copies are exports.
+- Maintain the student journey in `README.md`, navigation in `docs/repo-map.md`,
+  and the leave-behind in `docs/copilot-context-engineering.html`.
+  Distributed copies are exports.
 - Keep the handout's six copyable examples aligned with the context files.
 - Keep public materials audience-neutral and free of client identities,
   private session details, and internal metrics.

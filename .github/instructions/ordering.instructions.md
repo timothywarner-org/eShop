@@ -14,6 +14,8 @@ and key-generation configuration before claiming an ordering guarantee.
 - Check when numeric buyer and payment IDs become available. The mappings
   use HiLo; do not assume all generated keys arrive only at save time.
 - Distinguish `Buyer.Id` from `Buyer.IdentityGuid` in integration events.
+  Trace assignments and consumers before changing either: a database key
+  and an external identity serve different purposes even when names overlap.
 - Treat existing warning comments as claims to investigate against the
   current implementation, not proof that a runtime failure was reproduced.
 

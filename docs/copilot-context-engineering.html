@@ -291,7 +291,8 @@
   <h1>Speaking Copilot's Language</h1>
   <p class="thesis">GitHub Copilot searches and reads your code to assemble context for a task. Your prompt,
   instructions, conversation history, and tool results share a finite context window. Explore one
-  flow, verify the explanation, and preserve what you learn. This sheet holds six files ready to copy.</p>
+  flow, verify the explanation, and preserve both the fact and the reasoning rule.
+  This sheet holds six files ready to copy, plus guidance for building a repository map.</p>
   <p class="meta">
     Student reference &middot; Updated September 6, 2026<br>
     Tim Warner &middot; Principal Staff Author, Pluralsight &middot; Microsoft MVP<br>
@@ -305,6 +306,8 @@
 <nav class="toc" aria-labelledby="toc-heading">
   <h2 id="toc-heading">On this sheet</h2>
   <ol>
+    <li><a href="#repo-map">Orient with a repository map</a></li>
+    <li><a href="#preserve">Preserve the fact and the reasoning rule</a></li>
     <li><a href="#scopes">Three scopes and their paths</a></li>
     <li><a href="#four-tiers">Choose when guidance is needed</a></li>
     <li><a href="#tier-1">Tier 1: always loaded</a></li>
@@ -321,6 +324,73 @@
     <li><a href="#sources">Sources</a></li>
   </ol>
 </nav>
+
+<!-- ============================================================ -->
+<section id="repo-map">
+  <h2>Orient with a repository map</h2>
+  <p class="lede">A useful map helps you choose where to investigate. Start small, verify its
+  relationships, and follow one business flow into the source.</p>
+  <p>Open the lesson's <a href="https://github.com/timothywarner-org/eShop/blob/main/docs/repo-map.md">repository map</a>.
+  It gives you responsibilities, entry points, selected relationships, test locations, and an inspected
+  source revision. It also includes a prompt for drafting a map of your own checkout with an LLM.</p>
+  <table>
+    <thead><tr><th>Keep here</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>AGENTS.md</code></td><td>How the agent should work, including when to read the map.</td></tr>
+      <tr><td><code>docs/repo-map.md</code></td><td>Where to look: responsibilities, source paths, and checked relationships.</td></tr>
+      <tr><td>Source code and relevant tests</td><td>Evidence for the explanation. Read what the code does and what a test actually asserts.</td></tr>
+    </tbody>
+  </table>
+  <ol>
+    <li><strong>Inspect:</strong> have the LLM read the actual structure, entry points, callers, and registrations.</li>
+    <li><strong>Check:</strong> follow the cited paths. A folder name does not establish a responsibility;
+    an event-bus reference does not establish a subscription.</li>
+    <li><strong>Save:</strong> keep a concise map with evidence, the inspected revision, and explicit unknowns.</li>
+    <li><strong>Maintain:</strong> update affected entries when the implementation changes. Remove stale claims.</li>
+  </ol>
+  <div class="caution"><p><strong>The map is ordinary documentation.</strong>
+  <code>repo-map.md</code> has no special automatic-loading behavior. This fork's instructions and
+  <code>/trace-flow</code> direct the agent to read it when relevant. Check tool activity or explicitly
+  attach it to confirm use. Keep the full map out of always-on instructions.</p></div>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="preserve">
+  <h2>Preserve the fact and the reasoning rule</h2>
+  <p class="lede">The fact records what you found. The reasoning rule records how to investigate
+  similar code next time. Keep the evidence and explain why the rule matters.</p>
+  <table>
+    <thead><tr><th>Part</th><th>Worked Ordering example</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Verified fact</strong></td><td>The order-update handler passes numeric
+      <code>Buyer.Id</code> and <code>Payment.Id</code> to <code>SetPaymentMethodVerified</code>.
+      The submitted integration event carries the separate <code>BuyerIdentityGuid</code>,
+      supplied from <code>buyer.IdentityGuid</code>.</td></tr>
+      <tr><td><strong>Evidence</strong></td><td>Read the
+      <a href="https://github.com/timothywarner-org/eShop/blob/main/src/Ordering.API/Application/DomainEventHandlers/UpdateOrderWhenBuyerAndPaymentMethodVerifiedDomainEventHandler.cs">order-update handler</a>,
+      <a href="https://github.com/timothywarner-org/eShop/blob/main/src/Ordering.API/Application/DomainEventHandlers/ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler.cs">buyer validation handler</a>, and
+      <a href="https://github.com/timothywarner-org/eShop/blob/main/src/Ordering.API/Application/IntegrationEvents/Events/OrderStatusChangedToSubmittedIntegrationEvent.cs">event contract</a>.</td></tr>
+      <tr><td><strong>Reasoning rule and why</strong></td><td>Before changing or explaining an ID
+      across a boundary, trace its assignment and consumers. Distinguish database keys from
+      external identities because similarly named fields can represent different things.</td></tr>
+      <tr><td><strong>Scope and home</strong></td><td>Keep navigation and evidence in the map;
+      put the Ordering-specific check in Ordering instructions and the repeatable procedure in
+      the trace prompt.</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Your reusable format:</strong> Fact; Evidence (file and method); Reasoning rule
+  (what to check and why); Scope/home (where it applies and where to save it).</p>
+  <p><code>/trace-flow</code> now ends with <strong>What to preserve</strong>. It proposes at most
+  two findings for review and does not save them automatically. Check each claim against the source
+  before adding it to shared guidance. Keep the explanation concise and evidence-backed, with
+  untested hypotheses recorded separately from permanent instructions.</p>
+  <p><strong>Transfer exercise:</strong> investigate where the basket's displayed price comes from
+  and when it refreshes. Find the reads, caching, and relevant subscriptions without assuming the
+  mechanism. Finish with one verified fact, its evidence, and one reasoning rule that could help in
+  another codebase. State what still requires runtime observation.</p>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
 
 <!-- ============================================================ -->
 <section id="scopes">
@@ -410,8 +480,7 @@
   <p class="tier-note">Repository-wide guidance for supported Copilot Chat clients with instructions enabled.</p>
   <figure>
     <button class="copy" type="button">Copy</button>
-<pre>
-# Repository instructions
+<pre># Repository instructions
 
 Stack: .NET 10, ASP.NET Core, .NET Aspire orchestration, EF Core, MediatR.
 Architecture: service-per-bounded-context under `src/`, integration via
@@ -425,8 +494,7 @@ When explaining any cross-service flow:
 - Say explicitly when correctness depends on the order of side effects.
 
 When you cannot find something, say so and name what you searched.
-Do not infer the existence of a class or method you have not seen.
-</pre>
+Do not infer the existence of a class or method you have not seen.</pre>
   </figure>
 
   <p class="path">AGENTS.md</p>
@@ -434,8 +502,7 @@ Do not infer the existence of a class or method you have not seen.
   settings for the client or review feature you use; support is not identical across every surface.</p>
   <figure>
     <button class="copy" type="button">Copy</button>
-<pre>
-# AGENTS.md
+<pre># AGENTS.md
 
 ## Build and test
 - Build:   `dotnet build eShop.Web.slnf`
@@ -454,19 +521,26 @@ Do not infer the existence of a class or method you have not seen.
 - Generated migration files under `*/Migrations/`.
 - `eShop.ServiceDefaults` without flagging the cross-cutting impact.
 
+## Codebase navigation
+- For an unfamiliar business flow, read `docs/repo-map.md` for entry points,
+  then verify the relevant relationships in source. The map can become stale.
+- When preserving a finding, keep its evidence and the reasoning rule that
+  should guide the next investigation. State the rule's scope and why it matters;
+  do not turn an untested hypothesis into a permanent instruction.
+
 ## Lesson sources
 - This repository is the canonical student and demo source for the lesson.
 - Keep instructor scripts, cue sheets, private diagrams, and rehearsal
   material outside this repository. Do not commit or push them to origin.
-- Maintain the student journey in `README.md` and the leave-behind in
-  `docs/copilot-context-engineering.html`. Distributed copies are exports.
+- Maintain the student journey in `README.md`, navigation in `docs/repo-map.md`,
+  and the leave-behind in `docs/copilot-context-engineering.html`.
+  Distributed copies are exports.
 - Keep the handout's six copyable examples aligned with the context files.
 - Keep public materials audience-neutral and free of client identities,
   private session details, and internal metrics.
 - Verify claims against source and current product docs. Distinguish a
   documented warning from a reproduced failure; leave application code intact
-  unless the task explicitly calls for an application change.
-</pre>
+  unless the task explicitly calls for an application change.</pre>
   </figure>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
@@ -481,8 +555,7 @@ Do not infer the existence of a class or method you have not seen.
   <p class="path">.github/instructions/ordering.instructions.md</p>
   <figure>
     <button class="copy" type="button">Copy</button>
-<pre>
----
+<pre>---
 applyTo: "src/Ordering.API/**,src/Ordering.Domain/**,src/Ordering.Infrastructure/**"
 ---
 
@@ -498,21 +571,21 @@ and key-generation configuration before claiming an ordering guarantee.
 - Check when numeric buyer and payment IDs become available. The mappings
   use HiLo; do not assume all generated keys arrive only at save time.
 - Distinguish `Buyer.Id` from `Buyer.IdentityGuid` in integration events.
+  Trace assignments and consumers before changing either: a database key
+  and an external identity serve different purposes even when names overlap.
 - Treat existing warning comments as claims to investigate against the
   current implementation, not proof that a runtime failure was reproduced.
 
 When asked to explain or modify an ordering flow, always report:
 1. The command, the aggregate, and the handlers involved.
 2. Every point where correctness depends on execution order.
-3. Any existing `REVIEW` or `TODO` comment in the files you touched.
-</pre>
+3. Any existing `REVIEW` or `TODO` comment in the files you touched.</pre>
   </figure>
 
   <p class="path">.github/instructions/tests.instructions.md</p>
   <figure>
     <button class="copy" type="button">Copy</button>
-<pre>
----
+<pre>---
 applyTo: "tests/**"
 ---
 
@@ -534,8 +607,7 @@ Regardless of framework:
 - Unit tests never touch a database or a container. If a test needs
   either, it belongs in a `*.FunctionalTests` project instead.
 - Do not write a test that passes by asserting on a mock you configured
-  in the same test.
-</pre>
+  in the same test.</pre>
   </figure>
 
   <div class="caution">
@@ -555,14 +627,17 @@ Regardless of framework:
   <p class="path">.github/prompts/trace-flow.prompt.md</p>
   <figure>
     <button class="copy" type="button">Copy</button>
-<pre>
----
+<pre>---
 agent: agent
 description: Trace a request across service boundaries and report every
   place correctness depends on execution order.
 ---
 
 Trace the flow I name below from entry point to final side effect.
+Use file inspection by default. Do not edit files or execute the application
+unless explicitly requested. If `docs/repo-map.md` exists, read its relevant
+entries for orientation, then verify the path against source. Correct stale
+map claims in your report; do not treat the map as proof.
 
 Produce exactly these sections:
 
@@ -576,7 +651,8 @@ carries the data across it.
 ## Order dependencies
 Every point where correctness depends on the sequence of side effects,
 on a database-generated value being populated, or on a transaction
-boundary. For each one, state what breaks if the order changes.
+boundary. Explain the failure mechanism if the order changes, and label an
+untested consequence as predicted rather than reproduced.
 
 ## Existing warnings
 Quote verbatim every `REVIEW`, `TODO`, `HACK`, or `FIXME` comment in
@@ -585,8 +661,16 @@ any file on this path. If there are none, say so explicitly.
 ## What I could not determine
 Name what you looked for and did not find. Do not guess.
 
-Flow to trace:
-</pre>
+## What to preserve
+Propose at most two useful findings. For each, give:
+- Verified fact and supporting file/method.
+- Reasoning rule: what to check in similar work, and why it matters.
+- Scope and destination: where the rule applies and which existing map,
+  instruction, or prompt should hold it.
+Keep hypotheses out of permanent guidance. Propose these entries for review;
+do not save them unless requested.
+
+Flow to trace:</pre>
   </figure>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
@@ -601,8 +685,7 @@ Flow to trace:
   <p class="path">.github/skills/order-flow-audit/SKILL.md</p>
   <figure>
     <button class="copy" type="button">Copy</button>
-<pre>
----
+<pre>---
 name: order-flow-audit
 description: Audit a change to the ordering service for order-of-side-effect
   hazards, transaction boundary violations, and integration event contract
@@ -640,8 +723,7 @@ moves through the system.
 ## How to report
 Lead with the highest-severity finding. For each finding, give the file,
 the mechanism, and what breaks in production. Do not soften a real hazard
-into a style suggestion.
-</pre>
+into a style suggestion.</pre>
   </figure>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
@@ -707,10 +789,11 @@ into a style suggestion.
   </ul>
   <h3>Build understanding and instructions together</h3>
   <ol>
-    <li><strong>Explore:</strong> use <code>/trace-flow</code> on one business action.</li>
+    <li><strong>Explore:</strong> use the <a href="#repo-map">map</a> to choose one business action,
+    then investigate it with <code>/trace-flow</code>.</li>
     <li><strong>Verify:</strong> follow the cited files, inspect tool activity, and check the explanation.</li>
-    <li><strong>Preserve:</strong> capture only verified conventions and dependencies in a short,
-    appropriately scoped instruction.</li>
+    <li><strong>Preserve:</strong> keep the verified fact with its evidence and the reasoning rule
+    with its scope and purpose. Use the <a href="#preserve">worked example</a> above.</li>
     <li><strong>Reuse:</strong> investigate another flow and check whether the guidance improves the work.</li>
   </ol>
   <p>You do not need to understand the whole application before beginning. The map and the
@@ -810,8 +893,9 @@ into a style suggestion.
     <div><h4>What usage cannot prove</h4><p>License counts and chat activity alone do not establish
     understanding or correctness. Pair any adoption measures with reviewed work and learner feedback.</p></div>
   </div>
-  <p>Repeat the investigation on a different flow. Record what improved and what still needs human
-  checking. That gives you a concrete basis for refining the instructions.</p>
+  <p>Repeat the investigation on a different flow. Check whether the learner can defend a fact
+  from the source and explain a reasoning rule that transfers to similar work. Record what improved
+  and what still needs human checking. That gives you a concrete basis for refining the instructions.</p>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
 
