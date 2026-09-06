@@ -18,7 +18,9 @@
 - `eShop.ServiceDefaults` without flagging the cross-cutting impact.
 
 ## Lesson sources
-- This repository is the canonical source for the context-engineering lesson.
+- This repository is the canonical student and demo source for the lesson.
+- Keep instructor scripts, cue sheets, private diagrams, and rehearsal
+  material outside this repository. Do not commit or push them to origin.
 - Maintain the student journey in `README.md` and the leave-behind in
   `docs/copilot-context-engineering.html`. Distributed copies are exports.
 - Keep the handout's six copyable examples aligned with the context files.

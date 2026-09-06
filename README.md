@@ -125,7 +125,7 @@ You do not need an architecture manual before you start:
 3. **Preserve:** write a short instruction containing only the conventions and dependencies you verified, scoped to the relevant files.
 4. **Reuse:** investigate a different flow and check whether the guidance helps without steering Copilot toward an unsupported answer.
 
-For a transfer exercise, use `/trace-flow` to investigate **how a product-price change reaches the basket**. First locate the entry point and subscribers. Reuse the evidence standards, but derive that flow's facts from its own source. You have learned the method when you can explain a flow that this README has not already explained for you.
+For a transfer exercise, use `/trace-flow` to investigate **where the basket's displayed price comes from and when it is refreshed**. Find the data reads, caching, and any relevant event subscriptions without assuming the update mechanism. Reuse the evidence standards, but derive that flow's facts from its own source. You have learned the method when you can explain a flow that this README has not already explained for you.
 
 ## The HTML leave-behind
 
@@ -137,7 +137,7 @@ Spaces and Copilot CLI are extensions to the lesson. Neither is required for the
 
 ## Canonical sources and contributions
 
-**Maintain this lesson here, in `timothywarner-org/eShop`.** Update the README, context files, and HTML handout in this repository. Distributed handouts are copies of the repository version, not separate sources to edit.
+**This is the canonical student and demo repository, `timothywarner-org/eShop`.** Maintain the README, context files, and HTML handout here. Distributed handouts are copies of the repository version, not separate sources to edit. Instructor scripts, private notes, and rehearsal recordings are maintained separately and are not published here.
 
 - Update a context file and its copyable HTML example together.
 - Ground code claims in the checked-out source and volatile product claims in current first-party documentation.
