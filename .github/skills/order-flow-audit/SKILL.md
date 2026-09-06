@@ -15,21 +15,23 @@ moves through the system.
 
 ## What to check
 
-1. **Side effect ordering.** Does anything depend on a database-generated
-   value being populated before it is read? Domain events dispatch inside
-   the same transaction as `SaveChanges`, so this is the highest-frequency
-   defect in this service.
+1. **Side effect ordering.** Does anything depend on a generated value being
+   populated before it is read? `SaveEntitiesAsync` dispatches domain events
+   before `SaveChangesAsync`. Inspect HiLo key generation and the numeric
+   IDs consumed by the order-update handler. Distinguish these IDs from
+   the buyer identity string carried by integration events.
 
 2. **Transaction boundaries.** Does a handler perform work that must
    either commit with the aggregate or not at all? If it crosses the
    boundary, say what compensating action exists, or that none does.
 
-3. **Integration event contracts.** Any change to an event shape is a
-   breaking change to every subscriber. Enumerate the subscribers.
+3. **Integration event contracts.** Enumerate the subscribers and assess
+   compatibility when an event's shape or meaning changes. Explain which
+   consumers would break and why; do not assume every addition breaks all.
 
 4. **Existing warnings.** Quote any `REVIEW` or `TODO` comment in the
-   files under review. These are prior engineers telling you where the
-   fragility is.
+   files under review. Check the claim against the current implementation
+   and say whether any runtime failure has actually been reproduced.
 
 ## How to report
 Lead with the highest-severity finding. For each finding, give the file,

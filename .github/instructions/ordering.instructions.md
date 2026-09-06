@@ -7,13 +7,15 @@ applyTo: "src/Ordering.API/**,src/Ordering.Domain/**,src/Ordering.Infrastructure
 This is a Domain-Driven Design service. Aggregates own their invariants;
 command handlers orchestrate but do not contain business rules.
 
-Domain events dispatch through MediatR inside `OrderingContext`, and
-they run in the same transaction as `SaveChanges`. That has consequences:
+`OrderingContext.SaveEntitiesAsync` dispatches domain events through
+MediatR before calling `SaveChangesAsync`. Trace the surrounding transaction
+and key-generation configuration before claiming an ordering guarantee.
 
-- Anything that depends on a database-generated Id being populated is
-  fragile. Flag it every time you see it.
-- If a handler yields before `SaveChanges` completes, ordering guarantees
-  you may be assuming do not hold.
+- Check when numeric buyer and payment IDs become available. The mappings
+  use HiLo; do not assume all generated keys arrive only at save time.
+- Distinguish `Buyer.Id` from `Buyer.IdentityGuid` in integration events.
+- Treat existing warning comments as claims to investigate against the
+  current implementation, not proof that a runtime failure was reproduced.
 
 When asked to explain or modify an ordering flow, always report:
 1. The command, the aggregate, and the handlers involved.

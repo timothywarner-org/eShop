@@ -1,262 +1,149 @@
-# eShop, with a GitHub Copilot context engineering layer
+# Speaking Copilot's Language
 
-[![Upstream](https://img.shields.io/badge/upstream-dotnet%2FeShop-1f6feb?style=flat-square)](https://github.com/dotnet/eShop)
-[![License](https://img.shields.io/badge/license-MIT-1f6feb?style=flat-square)](LICENSE)
-[![Session](https://img.shields.io/badge/session-Speaking%20Copilot's%20Language-1f6feb?style=flat-square)](docs/copilot-context-engineering.html)
+**Understand an unfamiliar codebase, verify what you learn, and give GitHub Copilot reusable context for the next investigation.**
 
-This is a fork of [dotnet/eShop](https://github.com/dotnet/eShop) with one thing added: a
-complete, working **context engineering layer** for GitHub Copilot. Upstream's application code
-is untouched. Everything below is additive, and the original README follows this section.
+This is Tim Warner's teaching fork of [dotnet/eShop](https://github.com/dotnet/eShop), a .NET application with multiple services. It gives us a real system to investigate: commands, domain events, database operations, and messages crossing service boundaries. You do not need to understand all of eShop before you begin.
 
-Copilot does not read your repository. It **retrieves** from it, and everything it retrieves
-competes for the same finite context window as your prompt, your open files, and your chat
-history. The files in this fork are an argument about how to spend that budget deliberately
-instead of accidentally.
+The lesson follows one loop: **explore → verify → preserve → reuse**. Copilot helps you find and explain code. You check its explanation against the source, then record the useful knowledge in instructions, prompts, and skills that travel with the repository.
 
-## What was added
+**Start here:** [Try the investigation](#try-the-investigation) · [Read the HTML leave-behind](docs/copilot-context-engineering.html) · [See the context files](#the-context-layer) · [Run eShop](docs/eshop-application.md)
 
-Four tiers, six files. The only thing separating the tiers is **when the content is charged
-against the context window**.
+## What you will learn
 
-| Tier | Path | Enters the window when |
-| --- | --- | --- |
-| **1. Always** | `.github/copilot-instructions.md` | Every request in this repository, no exceptions |
-| **1. Always** | `AGENTS.md` | Every request, and also on Copilot code review |
-| **2. Conditionally** | `.github/instructions/ordering.instructions.md` | The `applyTo` glob matches a file under `src/Ordering.*` |
-| **2. Conditionally** | `.github/instructions/tests.instructions.md` | The `applyTo` glob matches a file under `tests/` |
-| **3. On request** | `.github/prompts/trace-flow.prompt.md` | You type `/trace-flow` in chat |
-| **4. On relevance** | `.github/skills/order-flow-audit/SKILL.md` | The agent reads the `description` and decides it applies |
+By the end, you should be able to:
 
-Tiers 2 through 4 cost nothing until they are needed. Tier 1 is charged on every single
-request, including the ones where its content is irrelevant, which is why both tier-1 files
-here are deliberately short. A four-hundred-line `copilot-instructions.md` is a tax you pay
-on every question you will ever ask.
+- **Trace one business flow** through an unfamiliar application using file and method references.
+- **Distinguish evidence from inference**, including existing warnings, assumptions, and unanswered questions.
+- **Choose where knowledge belongs**: repository instructions, path-scoped instructions, a reusable prompt, or an agent skill.
+- **Improve the next investigation** without making every request carry an entire architecture manual.
 
-## Why the ordering service
+The examples use C#, but the method applies to any language. Familiarity with functions, services, and database writes is enough to follow the investigation.
 
-The instruction files, the prompt file, and the skill all converge on one real defect that was
-already in this codebase before the fork. In
-`src/Ordering.API/Application/DomainEventHandlers/ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler.cs`:
+## Why context matters
 
-```csharp
-// REVIEW: The event this creates needs to be sent after SaveChanges has propagated the buyer Id. It currently only
-// works by coincidence. If we remove HiLo or if anything decides to yield earlier, it will break.
+Copilot builds an answer from the context available to it. In VS Code, an agent can search by meaning, search for exact text, follow symbol references, and read files. It can investigate repeatedly, but a fluent answer still needs checking. Your question, instructions, conversation history, and tool results share a finite context window. [How workspace context works](https://code.visualstudio.com/docs/agents/reference/workspace-context)
+
+Useful context answers two questions: **Where should we investigate? What should we check when we get there?** This fork demonstrates both. Its instructions require evidence, existing warnings, and explicit uncertainty, while its prompt defines a repeatable investigation.
+
+These files do not train the model or make it remember every file. They preserve guidance that supported tools can load into future requests.
+
+## Try the investigation
+
+**You can read the lesson and inspect all the source on GitHub without installing anything.** To try the prompts yourself, use VS Code with GitHub Copilot Chat enabled for your account. Open the repository root so its customizations can be discovered.
+
+You do **not** need to build eShop, start Docker, provision Azure resources, or run its services for this source-reading exercise. Full application setup is [a separate guide](docs/eshop-application.md).
+
+### 1. Open this fork
+
+Clone it with Git, or download the repository ZIP from GitHub and extract it. For PowerShell users:
+
+```powershell
+# Use the teaching fork so the lesson's instructions and prompt are included.
+git clone https://github.com/timothywarner-org/eShop.git
+if ($LASTEXITCODE -ne 0) { throw 'Clone failed; check Git access before continuing.' }
+Set-Location -LiteralPath eShop -ErrorAction Stop
 ```
 
-That is the only `REVIEW` comment in the entire `src/Ordering.*` tree, and it documents exactly
-the hazard the layer is built to surface: correctness depending on a database-generated Id being
-populated first. Every artifact here instructs Copilot to quote that comment verbatim rather
-than summarize it away.
+Open that folder in VS Code. Start a fresh Copilot chat. Check the indexing status if semantic search is unavailable; agents can also use text search and file reads while an index is being prepared. There is no file-count threshold you need to memorize for this lesson. [Current indexing guidance](https://code.visualstudio.com/docs/agents/reference/workspace-context#semantic-search)
 
-Nothing about the demo is synthetic. A prior engineer wrote down where the fragility is, and
-the point of a context engineering layer is that the next person to touch the file gets told.
+### 2. Investigate one question
 
-## Try it in about a minute
-
-1. Clone this fork and open it in **VS Code**.
-2. Build the workspace index first. See the warning below, because this step is not optional here.
-3. Open any file under `src/Ordering.API/` and ask Copilot Chat how an order is placed.
-4. Run `/trace-flow` and name the order placement flow.
-5. Open the **References** list on the answer. What was retrieved tells you whether a weak answer
-   was a retrieval problem or an instruction problem. It answers that question in about ten seconds,
-   and it answers it better than switching models does.
-
-> **Build the index before you judge the results.** This repository has roughly **1,150 tracked
-> files**. VS Code indexes a workspace automatically only below **750** files, and falls back to a
-> basic index using simpler search algorithms above **2,500**. Between those two numbers nothing
-> happens until you act, and the outcome is silent either way. Run
-> **GitHub Copilot: Build Remote Workspace Index** from the Command Palette, then confirm the tier
-> in the Copilot status dashboard in the Status Bar. Evaluating retrieval quality on an unbuilt
-> index is the most common way teams reach a wrong conclusion about Copilot.
-
-## Verifying the layer rather than trusting it
-
-A glob that silently matches nothing is indistinguishable from a glob that works. Both of the
-`applyTo` patterns here were checked against this tree before they were committed:
-
-- `src/Ordering.API`, `src/Ordering.Domain`, and `src/Ordering.Infrastructure` all exist.
-- `tests/` exists, including the `*.FunctionalTests` projects that
-  `tests.instructions.md` distinguishes from unit tests.
-
-Do the same on your own repository. Open a file inside the glob and confirm the instructions are
-in play, then open one outside it and confirm they are not.
-
-## The session sheet
-
-[`docs/copilot-context-engineering.html`](docs/copilot-context-engineering.html) is the full
-reference sheet these files came from, including the three scopes and their precedence, Copilot
-Spaces, reading the context budget with `/context` in Copilot CLI, what the remote index will
-never see whatever you write, and a sourced citation for every product claim.
-
-GitHub serves that file as source rather than as a rendered page. Open it locally, or enable
-**GitHub Pages** on the `docs/` folder to get a shareable URL.
-
-## Relationship to upstream
-
-This fork exists to teach a technique, not to compete with the reference application. It tracks
-[dotnet/eShop](https://github.com/dotnet/eShop) and stays under the same **MIT** license.
-
-- Bugs in the eShop application itself belong **upstream**. Please report them there.
-- Questions about the context engineering layer belong in this repository's **Issues**.
-- Application code here is not modified, so upstream remains the authority on how eShop works.
-
----
-
-<!-- Upstream dotnet/eShop README follows, unmodified. -->
-
-# eShop Reference Application - "AdventureWorks"
-
-A reference .NET application implementing an e-commerce website using a services-based architecture with [Aspire](https://aspire.dev/).
-
-![eShop Reference Application architecture diagram](img/eshop_architecture.png)
-
-![eShop homepage screenshot](img/eshop_homepage.png)
-
-## Getting Started
-
-This version of eShop is based on .NET 10.
-
-Previous eShop versions:
-
-* [.NET 8](https://github.com/dotnet/eShop/tree/release/8.0)
-
-### Prerequisites
-
-1. Install a [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) that satisfies [`global.json`](global.json).
-2. Install the [Aspire CLI](https://aspire.dev/get-started/install-cli/) and verify that it is available:
-
-    ```console
-    aspire --version
-    ```
-
-3. Install and start an OCI-compatible container runtime. [Docker Desktop](https://www.docker.com/products/docker-desktop/) is the recommended default. [Podman](https://podman.io/docs/installation) is also supported; follow the [Aspire prerequisites](https://aspire.dev/get-started/prerequisites/) to configure it.
-4. Clone the repository:
-
-    ```console
-    git clone https://github.com/dotnet/eShop.git
-    cd eShop
-    ```
-
-No separate Aspire workload or Visual Studio component is required; the AppHost SDK and hosting integrations are referenced by the projects in this repository.
-
-#### Optional IDE setup
-
-- [Visual Studio](https://visualstudio.microsoft.com/vs/) with the `ASP.NET and web development` workload.
-- [Visual Studio Code with C# Dev Kit](https://code.visualstudio.com/docs/csharp/get-started) and the [Aspire extension](https://aspire.dev/get-started/aspire-vscode-extension/).
-- The [.NET MAUI workload](https://learn.microsoft.com/dotnet/maui/get-started/installation) if you want to run the client apps.
-
-### Running the solution
-
-> [!WARNING]
-> Ensure that your container runtime is running before starting eShop.
-
-#### From the terminal
-
-From the repository root, run:
-
-```console
-aspire run
-```
-
-The root [`aspire.config.json`](aspire.config.json) selects `src/eShop.AppHost/eShop.AppHost.csproj`, avoiding ambiguity with the test AppHosts in the repository. When startup completes, the CLI prints a dashboard URL similar to:
+Paste this into Copilot Chat:
 
 ```text
-Dashboard: https://localhost:<port>/login?t=<token>
+Investigate the order-placement flow without changing files or running the application.
+When a buyer and payment method are created or verified, how do their numeric IDs
+reach the order? What does that depend on, and how does it differ from the buyer
+identity carried by the submitted integration event?
+
+Trace the relevant files and methods. Quote existing REVIEW, TODO, HACK, or FIXME
+comments. Separate what the code proves from assumptions and anything you could
+not determine. Do not propose a fix yet.
 ```
 
-Press <kbd>Ctrl</kbd>+<kbd>C</kbd> to stop the AppHost. See the [`aspire run` command](https://aspire.dev/reference/cli/commands/aspire-run/) for additional options.
+Read the response, then open its cited files and any available References or tool details. **A reference is a starting point for verification, not proof that the explanation is correct.**
 
-To run the AppHost in the background instead:
+### 3. Check the explanation against the code
 
-```console
-aspire start
-aspire ps
+The following files provide the evidence for this investigation. Read them after your first attempt if you want to find the path yourself.
+
+| Evidence | What to inspect |
+| --- | --- |
+| [Buyer validation handler](src/Ordering.API/Application/DomainEventHandlers/ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler.cs) | The existing `REVIEW` comment, payment verification, adding a new buyer, saving entities, and creating the integration event. |
+| [Buyer aggregate](src/Ordering.Domain/AggregatesModel/BuyerAggregate/Buyer.cs) | `VerifyOrAddPaymentMethod` queues a domain event carrying buyer and payment objects. |
+| [Ordering context](src/Ordering.Infrastructure/OrderingContext.cs) | `SaveEntitiesAsync` dispatches domain events before calling `SaveChangesAsync`. |
+| [Order-update handler](src/Ordering.API/Application/DomainEventHandlers/UpdateOrderWhenBuyerAndPaymentMethodVerifiedDomainEventHandler.cs) | `SetPaymentMethodVerified` receives `Buyer.Id` and `Payment.Id`. |
+| [Buyer mapping](src/Ordering.Infrastructure/EntityConfigurations/BuyerEntityTypeConfiguration.cs) and [payment mapping](src/Ordering.Infrastructure/EntityConfigurations/PaymentMethodEntityTypeConfiguration.cs) | Both numeric IDs use `UseHiLo`; investigate when values become available instead of assuming every key is assigned at save time. |
+| [Submitted integration event](src/Ordering.API/Application/IntegrationEvents/Events/OrderStatusChangedToSubmittedIntegrationEvent.cs) | Its buyer field is `BuyerIdentityGuid`, supplied from `buyer.IdentityGuid`, rather than the numeric `Buyer.Id`. |
+
+The warning is real source material, but **a warning comment is a claim to investigate**. Finding it does not reproduce a runtime failure or prove every part of its explanation. Follow the implementation, state the dependency, and identify what would need a test.
+
+### 4. Repeat with a reusable method
+
+In a fresh chat, invoke the included prompt:
+
+```text
+/trace-flow Order placement, focusing on buyer/payment verification and the order's
+numeric foreign keys. Read-only investigation: do not edit files or execute the app.
 ```
 
-When you are finished, run `aspire stop`. See the [`aspire start` command](https://aspire.dev/reference/cli/commands/aspire-start/) for details.
+The [prompt file](.github/prompts/trace-flow.prompt.md) asks for five sections: **Path, Boundaries, Order dependencies, Existing warnings, and What I could not determine**. If the command is not available in your client, open the file and paste its body into chat, followed by the flow and the read-only constraint. [Prompt-file documentation](https://code.visualstudio.com/docs/agent-customization/prompt-files)
 
-#### From Visual Studio
+Compare the answers using evidence, not length:
 
-1. Open `eShop.Web.slnf`.
-2. Set `src/eShop.AppHost/eShop.AppHost.csproj` as the startup project.
-3. Press <kbd>Ctrl</kbd>+<kbd>F5</kbd> to start eShop and open the Aspire dashboard.
+| Check | A useful answer demonstrates |
+| --- | --- |
+| Traceability | Its files and methods exist and support the described steps. |
+| Identity distinction | Numeric database keys are distinguished from the buyer's identity string. |
+| Execution order | It explains when events are queued, dispatched, and followed by persistence. |
+| Existing warnings | It quotes the relevant comment and checks its claim against the implementation. |
+| Uncertainty | It names unresolved questions and separates source analysis from runtime verification. |
 
-### Running tests
+**This fork already includes the context layer.** Both attempts can use it. This exercise compares an ordinary question with a structured investigation; it is not an instruction-free baseline or proof that one model is better. A useful first answer is a success, not a failed demonstration.
 
-Run the server tests:
+## The context layer
 
-```powershell
-dotnet test --solution eShop.Web.slnf
-```
+These six files are the teaching layer. Other skills inherited from upstream support application development and are outside the core exercise.
 
-Run the Playwright browser journeys. Playwright starts the AppHost automatically, so ensure your container runtime is running first.
+| Mechanism | File | Purpose in this lesson |
+| --- | --- | --- |
+| **Repository instructions** | [.github/copilot-instructions.md](.github/copilot-instructions.md) | Establish the stack and require source-grounded explanations, warnings, and explicit uncertainty. |
+| **Agent conventions** | [AGENTS.md](AGENTS.md) | Define build/test conventions, edit boundaries, and the canonical lesson sources. |
+| **Path-scoped instructions** | [ordering.instructions.md](.github/instructions/ordering.instructions.md) | Focus Ordering investigations on aggregates, ID availability, and transaction boundaries. |
+| **Path-scoped instructions** | [tests.instructions.md](.github/instructions/tests.instructions.md) | Distinguish this repository's unit and functional test conventions. |
+| **Reusable prompt** | [trace-flow.prompt.md](.github/prompts/trace-flow.prompt.md) | Make the investigation method repeatable through `/trace-flow`. |
+| **Agent skill** | [order-flow-audit/SKILL.md](.github/skills/order-flow-audit/SKILL.md) | Package the Ordering review procedure for relevant investigations and changes. |
 
-```powershell
-npm ci
-npx playwright install chromium
-npm run test:e2e
-```
+Think in terms of **when content is needed**. Keep repository guidance concise, scope subsystem rules to the relevant paths, invoke prompts for repeatable tasks, and use skills for procedures. Skills expose discovery metadata before their full instructions load. Client support, settings, and policies affect behavior, so verify which customizations were used. [Custom instructions](https://code.visualstudio.com/docs/agent-customization/custom-instructions), [agent skills](https://code.visualstudio.com/docs/agent-customization/agent-skills)
 
-### Optional: AI Chatbot with Microsoft Foundry
+## Apply the method to a codebase you do not know
 
-This option provisions a Microsoft Foundry resource during local development, so first authenticate to Azure and configure the subscription and location:
+You do not need an architecture manual before you start:
 
-```powershell
-az login
-aspire secret set "Azure:SubscriptionId" "<subscription-id>"
-aspire secret set "Azure:Location" "eastus"
-```
+1. **Explore:** choose one user action and ask Copilot for its path through the code.
+2. **Verify:** open the cited files, follow the calls, and challenge missing or contradictory evidence.
+3. **Preserve:** write a short instruction containing only the conventions and dependencies you verified, scoped to the relevant files.
+4. **Reuse:** investigate a different flow and check whether the guidance helps without steering Copilot toward an unsupported answer.
 
-Then enable Foundry and start eShop:
+For a transfer exercise, use `/trace-flow` to investigate **how a product-price change reaches the basket**. First locate the entry point and subscribers. Reuse the evidence standards, but derive that flow's facts from its own source. You have learned the method when you can explain a flow that this README has not already explained for you.
 
-```powershell
-$env:UseFoundry = "true"
-aspire run
-```
+## The HTML leave-behind
 
-Aspire provisions the `gpt-4.1-mini` and `text-embedding-3-small` deployments and injects their connection information into the consuming projects. The Foundry hosting integration currently uses a preview package. See [local Azure provisioning](https://aspire.dev/integrations/cloud/azure/local-provisioning/) and the [Microsoft Foundry hosting integration](https://aspire.dev/integrations/cloud/azure/azure-ai-foundry/azure-ai-foundry-host/) for details.
+**[docs/copilot-context-engineering.html](docs/copilot-context-engineering.html)** is the canonical reference handout. It includes the six copyable files, context-management guidance, optional Copilot Spaces and CLI material, and links to product documentation.
 
-### Deploy to Azure Container Apps
+GitHub displays HTML source rather than running it. After cloning or downloading this repository, open the file in a browser. It is self-contained for offline reading; its documentation links need an internet connection. Browser printing is supported. You can also download the raw HTML file from GitHub and open it locally.
 
-The AppHost is already configured with an Azure Container Apps environment, so the Aspire CLI can deploy directly from the application model. See the [Aspire Azure Container Apps deployment guide](https://aspire.dev/deployment/azure/container-apps/) for details.
+Spaces and Copilot CLI are extensions to the lesson. Neither is required for the investigation above.
 
-> [!WARNING]
-> This sample deploys PostgreSQL, Redis, and RabbitMQ as containers in Azure Container Apps. This configuration is intended for evaluation and demonstrations, not production data.
+## Canonical sources and contributions
 
-Prerequisites:
+**Maintain this lesson here, in `timothywarner-org/eShop`.** Update the README, context files, and HTML handout in this repository. Distributed handouts are copies of the repository version, not separate sources to edit.
 
-- The prerequisites listed above, including a running container runtime.
-- The [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli), an active Azure subscription, and permission to create resources.
+- Update a context file and its copyable HTML example together.
+- Ground code claims in the checked-out source and volatile product claims in current first-party documentation.
+- Keep public materials suitable for any student. Exclude client identities, private meeting details, and internal adoption data.
+- Use [this fork's Issues](https://github.com/timothywarner-org/eShop/issues) for lesson questions, broken instructions, or documentation corrections. Include the prompt, relevant files, expected behavior, and observed behavior.
 
-Sign in, optionally preview the deployment pipeline, and deploy:
+The application comes from [dotnet/eShop](https://github.com/dotnet/eShop) under the [MIT license](LICENSE). The lesson adds context and learning materials; it does not repair the Ordering behavior discussed here. See the [application guide](docs/eshop-application.md) for setup and runtime work, and follow [upstream contribution guidance](https://github.com/dotnet/eShop/blob/main/CONTRIBUTING.md) for application changes.
 
-```console
-az login
-aspire deploy --list-steps
-aspire deploy
-```
-
-For local interactive use, `aspire deploy` prompts for missing Azure settings. For non-interactive use, provide them explicitly:
-
-```powershell
-$env:Azure__SubscriptionId = "<subscription-id>"
-$env:Azure__Location = "eastus"
-$env:Azure__ResourceGroup = "rg-eshop-demo"
-aspire deploy --non-interactive
-```
-
-Use [`aspire publish`](https://aspire.dev/reference/cli/commands/aspire-publish/) when you need deployment artifacts for inspection or another deployment tool. Running it first is not required: `aspire deploy` invokes the deployment pipeline and its dependencies directly rather than consuming an earlier publish output.
-
-When you no longer need the deployment, run [`aspire destroy`](https://aspire.dev/reference/cli/commands/aspire-destroy/). This deletes the entire configured resource group, including resources that Aspire did not create, so review the target carefully before confirming.
-
-## Contributing
-
-For more information on contributing to this repo, read [the contribution documentation](./CONTRIBUTING.md) and [the Code of Conduct](CODE-OF-CONDUCT.md).
-
-### Sample data
-
-The sample catalog data is defined in [catalog.json](https://github.com/dotnet/eShop/blob/main/src/Catalog.API/Setup/catalog.json). Those product names, descriptions, and brand names are fictional and were generated using [GPT-35-Turbo](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/chatgpt), and the corresponding [product images](https://github.com/dotnet/eShop/tree/main/src/Catalog.API/Pics) were generated using [DALL·E 3](https://openai.com/dall-e-3).
-
-## eShop on Azure
-
-For a version of this app configured for deployment on Azure, please view [the eShop on Azure](https://github.com/Azure-Samples/eShopOnAzure) repo.
+**Tim Warner** · [TechTrainerTim.com](https://techtrainertim.com) · [Pluralsight author page](https://www.pluralsight.com/authors/tim-warner)

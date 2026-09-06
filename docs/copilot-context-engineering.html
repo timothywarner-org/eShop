@@ -75,6 +75,9 @@
 
   p { max-width: 46rem; }
 
+  /* Long setting names and file paths must remain readable on narrow screens and paper. */
+  p, li, th, td { overflow-wrap: anywhere; }
+
   /* path headings: the path IS the identity of the artifact */
   .path {
     font-family: var(--mono);
@@ -286,14 +289,15 @@
 
 <header class="masthead" id="top">
   <h1>Speaking Copilot's Language</h1>
-  <p class="thesis">GitHub Copilot doesn't read your repository. It retrieves from it, and everything it
-  retrieves competes for the same finite context window as your prompt, your open files, and your chat
-  history. This sheet holds every file we built during the session, ready to copy.</p>
+  <p class="thesis">GitHub Copilot searches and reads your code to assemble context for a task. Your prompt,
+  instructions, conversation history, and tool results share a finite context window. Explore one
+  flow, verify the explanation, and preserve what you learn. This sheet holds six files ready to copy.</p>
   <p class="meta">
-    Developer Forum &middot; September 9, 2026<br>
+    Student reference &middot; Updated September 6, 2026<br>
     Tim Warner &middot; Principal Staff Author, Pluralsight &middot; Microsoft MVP<br>
     <a href="https://techtrainertim.com">TechTrainerTim.com</a> &middot; <a href="https://www.pluralsight.com/authors/tim-warner">Pluralsight author page</a><br>
-    Demo repository: dotnet/eShop &middot; .NET 10 + Aspire &middot; 28 projects
+    Canonical lesson: <a href="https://github.com/timothywarner-org/eShop">timothywarner-org/eShop</a> &middot; .NET 10 + Aspire<br>
+    Start with the <a href="https://github.com/timothywarner-org/eShop#try-the-investigation">student walkthrough</a>. This repository owns the handout and context files.
   </p>
 </header>
 
@@ -302,17 +306,17 @@
   <h2 id="toc-heading">On this sheet</h2>
   <ol>
     <li><a href="#scopes">Three scopes and their paths</a></li>
-    <li><a href="#four-tiers">What separates the four tiers</a></li>
+    <li><a href="#four-tiers">Choose when guidance is needed</a></li>
     <li><a href="#tier-1">Tier 1: always loaded</a></li>
     <li><a href="#tier-2">Tier 2: conditionally loaded</a></li>
     <li><a href="#tier-3">Tier 3: invoked on request</a></li>
     <li><a href="#tier-4">Tier 4: loaded on relevance</a></li>
     <li><a href="#spaces">Copilot Spaces</a></li>
-    <li><a href="#big-repo">When the monorepo is too big</a></li>
+    <li><a href="#big-repo">Understand one flow at a time</a></li>
     <li><a href="#budget">Spend the budget on purpose</a></li>
-    <li><a href="#diagnose">Diagnose from the References list</a></li>
+    <li><a href="#diagnose">Diagnose from the evidence</a></li>
     <li><a href="#cli-context">Read the budget with /context</a></li>
-    <li><a href="#measuring">Measuring adoption</a></li>
+    <li><a href="#measuring">Measure understanding</a></li>
     <li><a href="#going-further">Going further</a></li>
     <li><a href="#sources">Sources</a></li>
   </ol>
@@ -373,65 +377,27 @@
     Write them so they compose.</p>
   </div>
   <div class="caution">
-    <p><strong>If you also run Claude Code, this order is upside down from the one you know.</strong>
-    Claude Code puts managed organization settings at the top of its precedence list, above the
-    command line, above the project, above the user. Copilot does the reverse: personal wins,
-    organization loses. An administrator who expects an organization-level instruction to be the
-    final word will be right in one of these two products and wrong in the other, so establish which
-    product you are arguing about before you argue about whose rule applies.</p>
+    <p><strong>Instructions and administrative policy are different controls.</strong> Instruction
+    precedence does not override organization permissions, tool restrictions, or other enforced settings.
+    Check the documentation for the specific client before relying on a priority rule.</p>
   </div>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
 <!-- ============================================================ -->
 <section id="four-tiers">
-  <h2>The only thing that distinguishes the four tiers is when content enters the window</h2>
-  <p class="lede">Every artifact below does the same job: it tells Copilot what you care about. What
-  separates them is <strong>when they get charged against your budget</strong>. Get this straight and
-  the rest of the sheet is obvious.</p>
-
+<h2>Choose when the guidance is needed</h2>
+  <p class="lede">These four teaching categories help you decide where to put knowledge.
+  They describe loading and purpose, not a universal priority order across every Copilot feature.</p>
   <table>
-    <thead>
-      <tr>
-        <th>Tier</th>
-        <th class="mono">Where it goes</th>
-        <th>Enters the window when</th>
-        <th>What it costs you</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Tier</th><th>Where it goes</th><th>How it is used</th><th>Budget habit</th></tr></thead>
     <tbody>
-      <tr class="charged">
-        <td><strong>1. Always</strong></td>
-        <td class="mono">.github/copilot-instructions.md<br>AGENTS.md</td>
-        <td>Every request in the repository, no exceptions</td>
-        <td><strong>Charged every time.</strong> Keep these short or they become a tax.</td>
-      </tr>
-      <tr>
-        <td><strong>2. Conditionally</strong></td>
-        <td class="mono">.github/instructions/<br>&nbsp;&nbsp;*.instructions.md</td>
-        <td>The <code>applyTo</code> glob matches a file in scope</td>
-        <td>Nothing until you're in that part of the tree. Start here.</td>
-      </tr>
-      <tr>
-        <td><strong>3. On request</strong></td>
-        <td class="mono">.github/prompts/<br>&nbsp;&nbsp;*.prompt.md</td>
-        <td>You type <code>/name</code> in chat</td>
-        <td>Nothing until invoked. Turns folklore into a command.</td>
-      </tr>
-      <tr>
-        <td><strong>4. On relevance</strong></td>
-        <td class="mono">.github/skills/&lt;name&gt;/<br>&nbsp;&nbsp;SKILL.md</td>
-        <td>The agent reads your description and decides it applies</td>
-        <td>Nothing until it loads. The description does the work.</td>
-      </tr>
+      <tr class="charged"><td><strong>1. Repository-wide</strong></td><td class="mono">.github/copilot-instructions.md<br>AGENTS.md</td><td>Included for workspace chat when supported and enabled.</td><td>Keep essential guidance short.</td></tr>
+      <tr><td><strong>2. Scoped</strong></td><td class="mono">.github/instructions/*.instructions.md</td><td>Applied to relevant files or tasks; these examples use <code>applyTo</code> patterns.</td><td>Load subsystem detail where it applies.</td></tr>
+      <tr><td><strong>3. Invoked</strong></td><td class="mono">.github/prompts/*.prompt.md</td><td>You invoke a repeatable task such as <code>/trace-flow</code>.</td><td>Reuse the investigation method.</td></tr>
+      <tr><td><strong>4. Procedural</strong></td><td class="mono">.github/skills/&lt;name&gt;/SKILL.md</td><td>Discovery metadata helps the agent select the skill; its body loads when selected or invoked.</td><td>Keep discovery concise and load details on demand.</td></tr>
     </tbody>
   </table>
-
-  <div class="caution">
-    <p><strong>The mistake that costs the most:</strong> growing
-    <code>copilot-instructions.md</code> into four hundred lines of coding standards. Every word in a
-    tier-1 file displaces retrieved code on <em>every single request</em>, including the requests where
-    those standards are irrelevant. If it wouldn't survive being read aloud, move it to tier 2.</p>
-  </div>
+  <div class="caution"><p><strong>Verify the actual client.</strong> Settings, feature support, and organization policies affect instruction discovery. Inspect the applied customizations and tool activity. A short instruction can guide an investigation; it does not guarantee a correct answer.</p></div>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
 
@@ -441,7 +407,7 @@
   <p class="lede">Two files, both repository-wide. Between them, keep the total under roughly a page.</p>
 
   <p class="path">.github/copilot-instructions.md</p>
-  <p class="tier-note">Applies to every Copilot Chat request in this repository.</p>
+  <p class="tier-note">Repository-wide guidance for supported Copilot Chat clients with instructions enabled.</p>
   <figure>
     <button class="copy" type="button">Copy</button>
 <pre>
@@ -464,9 +430,8 @@ Do not infer the existence of a class or method you have not seen.
   </figure>
 
   <p class="path">AGENTS.md</p>
-  <p class="tier-note">Repository root. Read by VS Code, by coding agents, and by Copilot code review
-  (generally available since June 18, 2026), so conventions written here also shape the review comments
-  on your pull requests.</p>
+  <p class="tier-note">Repository root. Shared conventions for supported agents. Check the documentation and
+  settings for the client or review feature you use; support is not identical across every surface.</p>
   <figure>
     <button class="copy" type="button">Copy</button>
 <pre>
@@ -474,20 +439,31 @@ Do not infer the existence of a class or method you have not seen.
 
 ## Build and test
 - Build:   `dotnet build eShop.Web.slnf`
-- Test:    `dotnet test`
+- Test:    `dotnet test --solution eShop.Web.slnf`
 - Run:     `dotnet run --project src/eShop.AppHost/eShop.AppHost.csproj`
 - Docker must be running before the AppHost starts.
 
 ## Conventions
 - Domain logic belongs in `*.Domain`. Never reach into a DbContext
   from an API endpoint.
-- Integration events are contracts. Changing one is a breaking change
-  to every subscriber; call that out rather than editing quietly.
+- Integration events are contracts. Check subscriber compatibility before
+  changing their shape or meaning; identify breaking changes explicitly.
 - Migrations are generated, never hand-edited.
 
 ## Do not touch
 - Generated migration files under `*/Migrations/`.
 - `eShop.ServiceDefaults` without flagging the cross-cutting impact.
+
+## Lesson sources
+- This repository is the canonical source for the context-engineering lesson.
+- Maintain the student journey in `README.md` and the leave-behind in
+  `docs/copilot-context-engineering.html`. Distributed copies are exports.
+- Keep the handout's six copyable examples aligned with the context files.
+- Keep public materials audience-neutral and free of client identities,
+  private session details, and internal metrics.
+- Verify claims against source and current product docs. Distinguish a
+  documented warning from a reproduced failure; leave application code intact
+  unless the task explicitly calls for an application change.
 </pre>
   </figure>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
@@ -496,8 +472,8 @@ Do not infer the existence of a class or method you have not seen.
 <!-- ============================================================ -->
 <section id="tier-2">
   <h2>Tier 2: conditionally loaded, and the one to build first</h2>
-  <p class="lede">The <code>applyTo</code> glob is what makes this tier free. Instructions for the
-  ordering service cost you nothing while you're working in catalog. This is also how the technique
+  <p class="lede">The <code>applyTo</code> glob scopes these instructions to relevant paths. Keep Ordering
+  details with Ordering work instead of adding them to every request. This is also how the technique
   survives on a small repository: scope by layer or by language instead of by service.</p>
 
   <p class="path">.github/instructions/ordering.instructions.md</p>
@@ -513,13 +489,15 @@ applyTo: "src/Ordering.API/**,src/Ordering.Domain/**,src/Ordering.Infrastructure
 This is a Domain-Driven Design service. Aggregates own their invariants;
 command handlers orchestrate but do not contain business rules.
 
-Domain events dispatch through MediatR inside `OrderingContext`, and
-they run in the same transaction as `SaveChanges`. That has consequences:
+`OrderingContext.SaveEntitiesAsync` dispatches domain events through
+MediatR before calling `SaveChangesAsync`. Trace the surrounding transaction
+and key-generation configuration before claiming an ordering guarantee.
 
-- Anything that depends on a database-generated Id being populated is
-  fragile. Flag it every time you see it.
-- If a handler yields before `SaveChanges` completes, ordering guarantees
-  you may be assuming do not hold.
+- Check when numeric buyer and payment IDs become available. The mappings
+  use HiLo; do not assume all generated keys arrive only at save time.
+- Distinguish `Buyer.Id` from `Buyer.IdentityGuid` in integration events.
+- Treat existing warning comments as claims to investigate against the
+  current implementation, not proof that a runtime failure was reproduced.
 
 When asked to explain or modify an ordering flow, always report:
 1. The command, the aggregate, and the handlers involved.
@@ -614,10 +592,9 @@ Flow to trace:
 <!-- ============================================================ -->
 <section id="tier-4">
   <h2>Tier 4: loaded on relevance</h2>
-  <p class="lede">Agent Skills went generally available in Copilot code review on July 29, 2026, so a
-  skill you write for chat also acts as a reviewer on your pull requests. The
-  <code>description</code> field is the whole game: it's what the agent reads to decide whether to load
-  the skill at all.</p>
+  <p class="lede">An agent skill packages a procedure. Copilot uses its name and description for discovery,
+  then loads the body when the skill is selected. In supported VS Code versions you can also invoke
+  skills directly. Describe both what the skill does and when it applies; verify its use in your session.</p>
 
   <p class="path">.github/skills/order-flow-audit/SKILL.md</p>
   <figure>
@@ -640,21 +617,23 @@ moves through the system.
 
 ## What to check
 
-1. **Side effect ordering.** Does anything depend on a database-generated
-   value being populated before it is read? Domain events dispatch inside
-   the same transaction as `SaveChanges`, so this is the highest-frequency
-   defect in this service.
+1. **Side effect ordering.** Does anything depend on a generated value being
+   populated before it is read? `SaveEntitiesAsync` dispatches domain events
+   before `SaveChangesAsync`. Inspect HiLo key generation and the numeric
+   IDs consumed by the order-update handler. Distinguish these IDs from
+   the buyer identity string carried by integration events.
 
 2. **Transaction boundaries.** Does a handler perform work that must
    either commit with the aggregate or not at all? If it crosses the
    boundary, say what compensating action exists, or that none does.
 
-3. **Integration event contracts.** Any change to an event shape is a
-   breaking change to every subscriber. Enumerate the subscribers.
+3. **Integration event contracts.** Enumerate the subscribers and assess
+   compatibility when an event's shape or meaning changes. Explain which
+   consumers would break and why; do not assume every addition breaks all.
 
 4. **Existing warnings.** Quote any `REVIEW` or `TODO` comment in the
-   files under review. These are prior engineers telling you where the
-   fragility is.
+   files under review. Check the claim against the current implementation
+   and say whether any runtime failure has actually been reproduced.
 
 ## How to report
 Lead with the highest-severity finding. For each finding, give the file,
@@ -680,8 +659,8 @@ into a style suggestion.
     </div>
     <div>
       <h4>Attach individual files</h4>
-      <p>That content is in play on every query against the Space, whether it helps or not. Same
-      economics as a tier-1 instruction file.</p>
+      <p>Individual files provide focused context for the Space's questions. Choose the small set
+      that defines the subsystem and check which sources support each answer.</p>
       <p class="verdict">Use for: the few documents that should always be true.</p>
     </div>
   </div>
@@ -692,192 +671,88 @@ into a style suggestion.
   <div class="caution">
     <p><strong>Check the date on your internal guidance.</strong> Copilot knowledge bases were retired
     on November 1, 2025 and replaced by Copilot Spaces, with a conversion path for existing ones. If a
-    runbook or onboarding doc still tells your team to create a knowledge base, that document is more
-    than a year stale and worth an owner.</p>
+    runbook or onboarding doc still tells your team to create a knowledge base, that guidance needs a currency check before reuse.</p>
   </div>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
 
 <!-- ============================================================ -->
 <section id="big-repo">
-  <h2>&ldquo;This monorepo is too big to understand in one bite&rdquo;</h2>
-  <p class="lede">Check which index Copilot is using before you change anything else. A workspace over
-  2,500 indexable files falls back to a basic index that searches with simpler algorithms, and the
-  fallback is silent. That one fact accounts for more weak monorepo answers than model choice, prompt
-  wording, and instruction files put together.</p>
-
-  <p>A large repository doesn't slow Copilot down in any way you can feel. What it does is lower the
-  odds that the retrieval step hands back the five files your question actually needed. Same model,
-  same latency, worse hit rate. So a conversation that opens with <em>let's go evaluate something
-  else</em> is solving for the wrong variable, and it'll cost you a quarter before anyone notices.</p>
-
-  <h3>Which index you are actually on</h3>
-  <p>VS Code selects the index by counting indexable files in the workspace, and the Copilot status
-  dashboard in the Status Bar reports which one you got. Open it on your own monorepo before the
-  first slide of any internal enablement session. The room goes quiet.</p>
-
-  <table>
-    <thead>
-      <tr><th>Index</th><th>How you get it</th><th>What it gives you</th></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="mono">Remote</td>
-        <td>Run <span class="mono">GitHub Copilot: Build Remote Workspace Index</span> from the
-        Command Palette. Needs a git remote on GitHub. Once per repository.</td>
-        <td>Semantic search that holds up on large codebases. GitHub refreshes it as you push.</td>
-      </tr>
-      <tr>
-        <td class="mono">Local</td>
-        <td>Automatic under 750 indexable files. Between 750 and 2,500, run
-        <span class="mono">Build local workspace index</span> once.</td>
-        <td>Fast, high quality, stored on your machine. The ceiling is 2,500 indexable files.</td>
-      </tr>
-      <tr class="charged">
-        <td class="mono">Basic</td>
-        <td>What you get past 2,500 files when no remote index exists.</td>
-        <td><strong>Simpler search algorithms.</strong> Nobody chose this. It is where most
-        monorepos sit, and it is the answer to &ldquo;why is Copilot worse on our repo.&rdquo;</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <p>Build the remote index and the file-count ceiling stops mattering. The catch worth saying out
-  loud to a monorepo team is the refresh condition: the remote index tracks <em>pushed</em> code on
-  the <em>default branch</em>. A long-lived unpushed branch is invisible to retrieval no matter how
-  good your instruction files are, which is why &ldquo;push regularly&rdquo; is GitHub's own written
-  remedy for stale results.</p>
-
-  <h3>What the index will never see, whatever you write</h3>
-  <p>The remote index is GitHub code search, so code search's exclusion rules are your exclusion
-  rules. These are the ones that land hardest on a monorepo:</p>
+<h2>Understand a large codebase one flow at a time</h2>
+  <p class="lede">Start with a business action you can name. A bounded question gives you an
+  explanation you can verify and a manageable set of files to inspect.</p>
+  <h3>Check access and search before judging the answer</h3>
+  <p>Current VS Code guidance describes automatically maintained semantic indexes. Inspect indexing
+  status in the Copilot status dashboard. When needed, the documented command is
+  <strong>Build Codebase semantic index</strong>. Availability depends on the repository, account,
+  and policy. Even without a semantic index, agents can use text search, file search, and language
+  intelligence. An unavailable index does not mean the agent is unable to investigate.</p>
+  <p>Do not use historical 750/2,500-file cutoffs as a current troubleshooting rule. The current
+  <a href="https://code.visualstudio.com/docs/agents/reference/workspace-context">workspace-context
+  documentation</a> describes the behavior to check. Repository size, search scope, tool output,
+  and model behavior can all affect the experience; measure the symptom before assigning a cause.</p>
+  <h3>Give the investigation useful boundaries</h3>
   <ul>
-    <li>Files over 350 KiB, and any file carrying more than one line over 4,096 bytes. Your generated
-    clients, your checked-in bundles, and that one enormous schema file are already gone.</li>
-    <li>Vendored and generated code. Binary files including PDFs. Anything not UTF-8 encoded.</li>
-    <li>Lines over 1,024 characters, which are truncated rather than dropped.</li>
-    <li>Everything outside the default branch.</li>
+    <li><strong>Name the flow and known symbols.</strong> Include an entry point, method, event, or
+    file when you know one. Ask for each hop and the evidence supporting it.</li>
+    <li><strong>Reduce irrelevant search results.</strong> Review <code>.gitignore</code>,
+    <code>files.exclude</code>, and <code>search.exclude</code>. Generated output can overwhelm
+    useful matches, but excluding a file you need can also hide evidence.</li>
+    <li><strong>Open the repository root for this lesson.</strong> If you work from a subfolder,
+    check <code>chat.useCustomizationsInParentRepositories</code> so parent instructions are discoverable.</li>
+    <li><strong>Read the source directly when necessary.</strong> Search-index exclusions are not
+    a complete description of what an agent can access through file-reading and other tools.</li>
   </ul>
-  <p>Mark generated paths with <span class="mono">linguist-generated</span> in a root
-  <span class="mono">.gitattributes</span> so the noise stops competing with your real code for
-  retrieval slots.</p>
-
-  <h3>Give Copilot a smaller room to search in</h3>
-  <p>Every technique here shrinks the candidate set rather than improving the search over it. That is
-  the only lever an application team owns, and it is a stronger one than prompt wording.</p>
-  <ul>
-    <li><strong>Trim <span class="mono">files.exclude</span>.</strong> The Copilot index skips
-    anything excluded by <span class="mono">files.exclude</span> or by
-    <span class="mono">.gitignore</span>. Dropping <span class="mono">dist/</span>,
-    <span class="mono">build/</span>, generated clients, and fixtures can carry a repository back
-    under 2,500 files, which is a change of index tier rather than a tidy-up.</li>
-    <li><strong>Use a multi-root workspace.</strong> This is GitHub's own written recommendation for
-    monorepos: a <span class="mono">.code-workspace</span> file listing the two or three services a
-    developer actually touches gives the agent clear boundaries and cuts the indexable count at the
-    same time.</li>
-    <li><strong>Turn on
-    <span class="mono">chat.useCustomizationsInParentRepositories</span>.</strong> If your developers
-    open <span class="mono">packages/checkout</span> rather than the repository root, instruction
-    discovery breaks silently. This setting is the documented fix, and it is the single most
-    commonly missed setting on this page.</li>
-    <li><strong>Point at files instead of searching for them.</strong> A
-    <span class="mono">#folder</span> or <span class="mono">#file</span> reference beats a semantic
-    search over 200,000 files every time. Teach <span class="mono">#codebase</span> rather than
-    <span class="mono">@workspace</span>, which is ask-mode only and effectively legacy.</li>
-  </ul>
-
-  <h3>Make retrieval deterministic when it matters</h3>
-  <p>Semantic search is a probability. On a repository this size you sometimes want a guarantee, and
-  two tools give you one.</p>
-
-  <div class="compare">
-    <div>
-      <h4>GitHub MCP server, <span class="mono">search_code</span></h4>
-      <p>Full code-search qualifier syntax, so <span class="mono">path:</span>,
-      <span class="mono">filename:</span>, and <span class="mono">language:</span> return exactly
-      what you named. Scope the server with
-      <span class="mono">GITHUB_TOOLSETS="repos,pull_requests,code_security"</span> so its tool
-      definitions don't eat the window they were meant to save.</p>
-      <p class="verdict">Use for: surgical retrieval in a tree you can name.</p>
-    </div>
-    <div>
-      <h4>A curated Copilot Space</h4>
-      <p>Attach the ten to twenty files that define a subsystem as <em>files</em>, so they are in
-      context for every query, and attach the monorepo itself as a <em>repository</em> for search
-      fallback. That combination is the documented way to stop losing the retrieval lottery.</p>
-      <p class="verdict">Use for: a subsystem your team asks about weekly.</p>
-    </div>
-  </div>
-
-  <h3>Work it in this order</h3>
+  <h3>Build understanding and instructions together</h3>
   <ol>
-    <li><strong>Check the index tier in the Status Bar.</strong> If it says basic, stop here and build
-    the remote index. Nothing else on this list matters until that is done.</li>
-    <li><strong>Open the References list</strong> on the weak answer. That takes ten seconds and it
-    tells you whether retrieval or instruction was the problem.</li>
-    <li><strong>If the right file wasn't retrieved</strong>, narrow the question or write the
-    path-scoped instruction file for that part of the tree.</li>
-    <li><strong>If the budget is the constraint</strong>, close the tabs and start a fresh chat before
-    you change anything structural. That's free and it's immediate.</li>
-    <li><strong>Put the durable knowledge in a Space</strong>, with the handful of always-true
-    documents attached as files rather than as a whole repository.</li>
+    <li><strong>Explore:</strong> use <code>/trace-flow</code> on one business action.</li>
+    <li><strong>Verify:</strong> follow the cited files, inspect tool activity, and check the explanation.</li>
+    <li><strong>Preserve:</strong> capture only verified conventions and dependencies in a short,
+    appropriately scoped instruction.</li>
+    <li><strong>Reuse:</strong> investigate another flow and check whether the guidance improves the work.</li>
   </ol>
-
-  <p><strong>The fair objection, and it deserves a straight answer.</strong> On a repository nobody on
-  the team has read end to end, how are you supposed to write path-scoped instructions for a tree you
-  can't characterize yet? That's a genuine chicken-and-egg and I'm not going to wave it off.</p>
-
-  <p>You don't have to know the codebase first. Make Copilot draw you the map. Point a prompt file at
-  a single flow, tell it to name every service that flow touches in order along with every place
-  correctness depends on execution order, then read the answer against the References list. What it
-  retrieved shows you where the seams are, and what it missed shows you where the instruction layer
-  needs to go. You write that one file, the next question lands better, and then you do it again on
-  the next flow. The characterization and the instruction layer build each other, one flow at a
-  time.</p>
-
-  <div class="caution">
-    <p><strong>Two questions to stop asking of a large repository.</strong> GitHub documents that
-    Copilot cannot do comprehensive analysis across a codebase, naming
-    <em>&ldquo;how many times is this function invoked?&rdquo;</em> and
-    <em>&ldquo;rectify all bugs in this project&rdquo;</em> as examples, and it cannot answer
-    questions about information outside the code such as who contributed to a file. These are exactly
-    the questions people try first on a monorepo, they fail quietly rather than loudly, and the
-    failure gets blamed on the model.</p>
-  </div>
-
+  <p>You do not need to understand the whole application before beginning. The map and the
+  instruction layer develop together, one checked explanation at a time. Keep assumptions visible
+  so they do not become permanent instructions by accident.</p>
+  <div class="caution"><p><strong>The sample already includes guidance.</strong> Repeating the
+  Ordering question here is not an instruction-free comparison. Finding a warning is useful, but it
+  does not reproduce a defect. In this example, distinguish numeric <code>Buyer.Id</code> and
+  <code>Payment.Id</code> from the integration event's <code>BuyerIdentityGuid</code>. Follow the
+  <a href="https://github.com/timothywarner-org/eShop#try-the-investigation">README investigation</a>
+  to check the evidence.</p></div>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
 
 <!-- ============================================================ -->
 <section id="budget">
-  <h2>Spend the budget on purpose</h2>
-  <p class="lede">Three habits, in order of how much they return.</p>
+<h2>Spend the budget on purpose</h2>
+  <p class="lede">Give the next request the context it needs to answer the current question.</p>
   <ol>
-    <li><strong>Close the editor tabs you aren't using.</strong> Open files are a line item on every
-    request. That makes this the cheapest correction on the list.</li>
-    <li><strong>Start a new chat when the topic changes.</strong> History accumulates every turn, and
-    an old thread spends your budget on a problem you already solved.</li>
-    <li><strong>Keep tier-1 files short enough to read aloud.</strong> If you can't, the content belongs
-    in a path-scoped file where it costs nothing until it's relevant.</li>
+    <li><strong>Review explicit and editor context.</strong> Attach the relevant files or selection
+    and remove irrelevant attachments. Do not assume every open tab is included in full.</li>
+    <li><strong>Start a fresh chat when the topic changes.</strong> Preserve verified conclusions
+    in repository files instead of relying on a long conversation.</li>
+    <li><strong>Keep always-on guidance short.</strong> Move subsystem details and procedures into
+    scoped instructions and skills. Large search results and tool outputs also consume context.</li>
   </ol>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
 
 <!-- ============================================================ -->
 <section id="diagnose">
-  <h2>Diagnose from the References list, not the model picker</h2>
-  <p class="lede">When an answer is weak, the useful question is never "which model should I have
-  used." Work this order instead.</p>
+<h2>Diagnose the answer from its evidence</h2>
   <ol>
-    <li><strong>Open the References list.</strong> What did it actually retrieve? This answers most
-    questions in ten seconds.</li>
-    <li><strong>Was the right file absent?</strong> Then it's a retrieval problem. Scope the question
-    narrower, or point at the file directly, or write a tier-2 instruction file for that path.</li>
-    <li><strong>Was the right file present and ignored?</strong> Then it's an instruction problem. Tell
-    it what to care about in that part of the tree.</li>
-    <li><strong>Did you commit recently?</strong> The index lags. A file you added minutes ago may not
-    be retrievable yet, and that's an operational fact worth planning around rather than a bug.</li>
-    <li><strong>Only now consider the model.</strong> It's the smallest lever in the room.</li>
+    <li><strong>Check references and tool activity.</strong> Which files were searched or read?
+    Open them and verify the claims. The displayed references alone are not a complete causal diagnosis.</li>
+    <li><strong>If evidence is missing, narrow the investigation.</strong> Name a path or symbol,
+    check access and exclusions, or explicitly request a file read.</li>
+    <li><strong>If the evidence was misinterpreted, challenge the reasoning.</strong> Ask how the
+    cited lines support the conclusion and which assumptions remain. Adjust instructions if a durable
+    investigation rule is missing.</li>
+    <li><strong>If results appear stale, check the actual checkout and index status.</strong>
+    Do not assume every context problem is indexing lag.</li>
+    <li><strong>Evaluate model choice with the same evidence criteria.</strong> Compare correctness,
+    coverage, and uncertainty on representative questions.</li>
   </ol>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
@@ -924,32 +799,17 @@ into a style suggestion.
 </section>
 <!-- ============================================================ -->
 <section id="measuring">
-  <h2>Measuring adoption without fooling yourself</h2>
-  <p class="lede">The usage dashboard groups your population into adoption-phase cohorts, which beats a
-  seat count. A seat count tells you who holds a license. A cohort tells you who changed how they work.</p>
-
+<h2>Measure whether the explanation helped</h2>
+  <p class="lede">For this lesson, success means a student can explain the flow with evidence and
+  apply the method to another flow. A longer answer or an accepted suggestion is not enough.</p>
   <div class="compare">
-    <div>
-      <h4>What the cohorts are good for</h4>
-      <p>Finding where enablement will pay. A team clustered in early phases needs something different
-      from a team that plateaued after the novelty faded.</p>
-    </div>
-    <div>
-      <h4>What they can't see</h4>
-      <p>These numbers can't tell you whether an accepted suggestion was any good, whether your senior
-      engineers quietly stopped using it, or whether someone got genuinely faster rather than generating
-      more code for a colleague to review.</p>
-    </div>
+    <div><h4>Useful evidence</h4><p>Correct file and method references, accurate boundaries,
+    distinguished identifiers, checked warnings, and explicit unknowns.</p></div>
+    <div><h4>What usage cannot prove</h4><p>License counts and chat activity alone do not establish
+    understanding or correctness. Pair any adoption measures with reviewed work and learner feedback.</p></div>
   </div>
-
-  <p style="margin-top:1.25rem">The pattern worth watching for is what happens after a launch push.
-  A contest or an internal campaign moves the population hard, and then a chunk of it settles back
-  within a quarter. That's normal, and it's also the moment these cohorts start earning their keep,
-  because the people who stayed changed a working habit and the people who drifted were riding the
-  novelty. Aim your next round at that second group with something concrete, like a path-scoped
-  instruction file for the tree they actually work in, rather than another all-hands demo.</p>
-
-  <p>Use the cohorts to aim, then go ask people. The dashboard is a map and it isn't the territory.</p>
+  <p>Repeat the investigation on a different flow. Record what improved and what still needs human
+  checking. That gives you a concrete basis for refining the instructions.</p>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
 
@@ -974,79 +834,21 @@ into a style suggestion.
 
 <!-- ============================================================ -->
 <section id="sources">
-  <h2>Sources</h2>
-  <p class="lede">Every product claim on this sheet traces to one of these. Each link was resolved and
-  checked on <span class="stamp">September 4, 2026</span>. Dates given are GitHub changelog dates. If
-  you are about to repeat one of these claims inside your own organization, click through first,
-  because this surface moves faster than internal documentation does.</p>
-
-  <h3>How the instruction layer is defined</h3>
+<h2>Sources and currency</h2>
+  <p class="lede">Core workspace, prompt, skill, Spaces, and CLI guidance was checked on
+  <span class="stamp">September 6, 2026</span>. Product behavior can change. Confirm support in the
+  client you use and validate repository claims against the checked-out code.</p>
   <ul class="sources">
-    <li><a href="https://docs.github.com/en/copilot/concepts/response-customization">Configuring Copilot responses: file types and precedence</a>
-      <span class="claim">Source for the four tiers. Worth reading for the precedence order alone: path-specific instructions rank above repository-wide, and agent instructions rank lowest.</span></li>
-    <li><a href="https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions">Adding repository custom instructions</a>
-      <span class="claim">Source for <code>applyTo</code> glob syntax, including that multiple patterns go in one string separated by commas.</span></li>
-    <li><a href="https://code.visualstudio.com/docs/agent-customization/custom-instructions">VS Code: custom instructions</a>
-      <span class="claim">The editor-side view of the same files, which is where you will actually build them. Also the source for the personal scope paths and for Settings Sync carrying them between machines.</span></li>
-    <li><a href="https://code.visualstudio.com/docs/agent-customization/prompt-files">VS Code: prompt files</a>
-      <span class="claim">Source for prompt-file frontmatter and slash-command invocation.</span></li>
-    <li><a href="https://docs.github.com/en/copilot/concepts/agents/about-agent-skills">About agent skills</a>
-      <span class="claim">Source for the <code>SKILL.md</code> convention and the required <code>name</code> and <code>description</code> frontmatter.</span></li>
-    <li><a href="https://agents.md/">AGENTS.md, the cross-tool convention</a>
-      <span class="claim">Context for why this file isn't Copilot-specific.</span></li>
-  </ul>
-
-  <h3>Scopes, and reading the budget directly</h3>
-  <ul class="sources">
-    <li><a href="https://docs.github.com/en/copilot/concepts/agents/copilot-cli/context-management">Managing context in GitHub Copilot CLI</a>
-      <span class="claim">Source for the <code>/context</code> line items, the 80 percent compaction threshold, the 20 percent buffer, and the 95 percent pause.</span></li>
-    <li><a href="https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference">GitHub Copilot CLI command reference</a>
-      <span class="claim">The full slash-command list, worth checking before you type one on a call.</span></li>
-  </ul>
-
-  <h3>Retrieval, which is the whole argument</h3>
-  <ul class="sources">
-    <li><a href="https://docs.github.com/en/copilot/concepts/context/repository-indexing">Indexing repositories for Copilot</a>
-      <span class="claim">Semantic code search finds code by meaning rather than exact text match. Read this before you blame the model.</span></li>
-      <li><a href="https://code.visualstudio.com/docs/copilot/reference/workspace-context">VS Code: how Copilot understands your workspace</a>
-      <span class="claim">Source for the remote, local, and basic index tiers and for the 750 and 2,500 file thresholds. Note that the rewritten page at /docs/agents/reference/workspace-context omits the numbers, so cite this URL for them and re-check it before you quote a threshold on stage.</span></li>
-      <li><a href="https://docs.github.com/en/search-github/github-code-search/about-github-code-search">About GitHub code search</a>
-      <span class="claim">Source for what the remote index excludes: the 350 KiB file cap, the 4,096-byte line rule, vendored and generated code, and default-branch-only indexing.</span></li>
-      <li><a href="https://code.visualstudio.com/docs/agents/best-practices">VS Code: best practices for using AI</a>
-      <span class="claim">Source for the multi-root workspace recommendation for monorepos, and for preferring explicit file and folder references over whole-codebase search.</span></li>
-      <li><a href="https://code.visualstudio.com/docs/editing/workspaces/multi-root-workspaces">VS Code: multi-root workspaces</a>
-      <span class="claim">The .code-workspace schema, if you are writing one for each service in the tree.</span></li>
-      <li><a href="https://github.com/github/github-mcp-server">github/github-mcp-server</a>
-      <span class="claim">Source for the search_code tool and for GITHUB_TOOLSETS, which is how you keep the server's tool definitions from spending the context window you connected it to save.</span></li>
-    <li><a href="https://docs.github.com/en/copilot/concepts/context/spaces">About Copilot Spaces</a>
-      <span class="claim">Source for the attachment distinction: a repository is searched and retrieved on demand, an attached file is loaded for every query.</span></li>
-    <li><a href="https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces/create-copilot-spaces">Creating Copilot Spaces</a></li>
-  </ul>
-
-  <h3>Dated changes to check your internal guidance against</h3>
-  <ul class="sources">
-    <li><a href="https://github.blog/changelog/2026-07-29-copilot-code-review-agent-skills-and-mcp-now-generally-available/">Agent skills and MCP in code review, generally available</a>
-      <span class="claim">July 29, 2026. A skill you write for chat also reviews your pull requests.</span></li>
-    <li><a href="https://github.blog/changelog/2026-06-18-copilot-code-review-agents-md-support-and-ui-improvements/">AGENTS.md support in code review</a>
-      <span class="claim">June 18, 2026. Read from the repository root.</span></li>
-    <li><a href="https://github.blog/changelog/2026-07-17-copilot-code-review-customization-and-configurability-improvements/">Code review customization and configurability</a>
-      <span class="claim">July 17, 2026. Instructions are read from the pull request head branch rather than the base branch, which changes how you test an instruction change.</span></li>
-    <li><a href="https://github.blog/changelog/2025-11-12-copilot-code-review-and-coding-agent-now-support-agent-specific-instructions/">Agent-specific instructions</a>
-      <span class="claim">November 12, 2025. The <code>excludeAgent</code> property scopes an instructions file away from a given agent.</span></li>
-    <li><a href="https://github.blog/changelog/2025-08-20-sunset-notice-copilot-knowledge-bases/">Sunset notice: knowledge bases</a>
-      <span class="claim">Retired November 1, 2025.</span></li>
-    <li><a href="https://github.blog/changelog/2025-10-17-copilot-knowledge-bases-can-now-be-converted-to-copilot-spaces/">Converting knowledge bases to Spaces</a>
-      <span class="claim">October 17, 2025. The migration path, if you still have one open.</span></li>
-    <li><a href="https://github.blog/changelog/2025-12-18-github-copilot-now-supports-agent-skills/">Copilot supports agent skills</a>
-      <span class="claim">December 18, 2025.</span></li>
-    <li><a href="https://github.blog/changelog/2025-08-13-add-repositories-to-spaces/">Adding whole repositories to Spaces</a>
-      <span class="claim">August 13, 2025.</span></li>
-  </ul>
-
-  <h3>The demo repository</h3>
-  <ul class="sources">
-    <li><a href="https://github.com/dotnet/eShop">dotnet/eShop</a>
-      <span class="claim">The reference application used throughout. Public, so everything shown today is reproducible against it.</span></li>
+    <li><a href="https://code.visualstudio.com/docs/agents/reference/workspace-context">VS Code: workspace context</a><span class="claim">Search and reading tools, semantic indexes, exclusions, and troubleshooting.</span></li>
+    <li><a href="https://code.visualstudio.com/docs/agent-customization/custom-instructions">VS Code: custom instructions</a><span class="claim">Repository files, path-scoped instructions, discovery, and settings.</span></li>
+    <li><a href="https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions">GitHub: repository instructions</a><span class="claim">Supported instruction types and differences between Copilot features.</span></li>
+    <li><a href="https://code.visualstudio.com/docs/agent-customization/prompt-files">VS Code: prompt files</a><span class="claim">Prompt frontmatter and invocation.</span></li>
+    <li><a href="https://code.visualstudio.com/docs/agent-customization/agent-skills">VS Code: agent skills</a><span class="claim">Discovery metadata, progressive loading, and manual invocation.</span></li>
+    <li><a href="https://docs.github.com/en/copilot/concepts/context/spaces">GitHub: Copilot Spaces</a><span class="claim">Curating and sharing context from GitHub and other materials.</span></li>
+    <li><a href="https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/copilot-spaces/create-copilot-spaces">GitHub: creating Spaces</a><span class="claim">Choosing repositories and individual files as sources.</span></li>
+    <li><a href="https://docs.github.com/en/copilot/concepts/agents/copilot-cli/context-management">GitHub: CLI context management</a><span class="claim">The optional /context and /compact commands and current compaction behavior.</span></li>
+    <li><a href="https://github.com/timothywarner-org/eShop">Canonical lesson repository</a><span class="claim">The student journey, live context files, and this handout.</span></li>
+    <li><a href="https://github.com/dotnet/eShop">Upstream eShop</a><span class="claim">The source application, preserved under its MIT license.</span></li>
   </ul>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
