@@ -314,6 +314,8 @@
     <li><a href="#tier-2">Tier 2: conditionally loaded</a></li>
     <li><a href="#tier-3">Tier 3: invoked on request</a></li>
     <li><a href="#tier-4">Tier 4: loaded on relevance</a></li>
+    <li><a href="#tier-5">Tier 5: bounded by tools</a></li>
+    <li><a href="#surface-support">Which surface honors which file</a></li>
     <li><a href="#spaces">Copilot Spaces</a></li>
     <li><a href="#big-repo">Understand one flow at a time</a></li>
     <li><a href="#budget">Spend the budget on purpose</a></li>
@@ -456,7 +458,7 @@
 <!-- ============================================================ -->
 <section id="four-tiers">
 <h2>Choose when the guidance is needed</h2>
-  <p class="lede">These four teaching categories help you decide where to put knowledge.
+  <p class="lede">These five teaching categories help you decide where to put knowledge.
   They describe loading and purpose, not a universal priority order across every Copilot feature.</p>
   <table>
     <thead><tr><th>Tier</th><th>Where it goes</th><th>How it is used</th><th>Budget habit</th></tr></thead>
@@ -465,6 +467,7 @@
       <tr><td><strong>2. Scoped</strong></td><td class="mono">.github/instructions/*.instructions.md</td><td>Applied to relevant files or tasks; these examples use <code>applyTo</code> patterns.</td><td>Load subsystem detail where it applies.</td></tr>
       <tr><td><strong>3. Invoked</strong></td><td class="mono">.github/prompts/*.prompt.md</td><td>You invoke a repeatable task such as <code>/trace-flow</code>.</td><td>Reuse the investigation method.</td></tr>
       <tr><td><strong>4. Procedural</strong></td><td class="mono">.github/skills/&lt;name&gt;/SKILL.md</td><td>Discovery metadata helps the agent select the skill; its body loads when selected or invoked.</td><td>Keep discovery concise and load details on demand.</td></tr>
+      <tr><td><strong>5. Bounded</strong></td><td class="mono">.github/agents/*.agent.md</td><td>You select a persona whose <code>tools</code> list decides what it can do at all.</td><td>Put the guardrail in configuration, not in prose.</td></tr>
     </tbody>
   </table>
   <div class="caution"><p><strong>Verify the actual client.</strong> Settings, feature support, and organization policies affect instruction discovery. Inspect the applied customizations and tool activity. A short instruction can guide an investigation; it does not guarantee a correct answer.</p></div>
@@ -504,43 +507,121 @@ Do not infer the existence of a class or method you have not seen.</pre>
     <button class="copy" type="button">Copy</button>
 <pre># AGENTS.md
 
+## What this repository is
+
+A teaching fork of `dotnet/eShop`: a .NET 10 e-commerce reference application,
+service-per-bounded-context under `src/`, orchestrated by .NET Aspire, with
+EF Core, MediatR, PostgreSQL, Redis, and RabbitMQ. About 20 projects in `src/`
+and 9 test projects in `tests/`.
+
+The application code is upstream material. The deliverable maintained here is
+the context-engineering lesson layered on top of it. **Always default to
+reading source rather than changing it.** Leave application code intact unless
+the task explicitly calls for an application change.
+
 ## Build and test
-- Build:   `dotnet build eShop.Web.slnf`
-- Test:    `dotnet test --solution eShop.Web.slnf`
-- Run:     `dotnet run --project src/eShop.AppHost/eShop.AppHost.csproj`
-- Docker must be running before the AppHost starts.
+
+Preconditions, in order. Check them before reporting a failure as a code defect.
+
+1. **SDK.** `global.json` pins `10.0.302` with `rollForward: latestFeature`,
+   which requires the `3xx` feature band or higher. A 10.0.1xx or 10.0.2xx SDK
+   does not satisfy it and fails with a missing-SDK message rather than a
+   compile error. Verify with `dotnet --version` at the repository root.
+2. **Container runtime.** Required before the AppHost or any functional test
+   starts. Docker Desktop is the default; Podman is supported.
+
+| Task | Command |
+| --- | --- |
+| Build | `dotnet build eShop.Web.slnf` |
+| Test | `dotnet test --solution eShop.Web.slnf` |
+| Run | `aspire run` from the repository root |
+| Browser journeys | `npm ci`, then `npx playwright install chromium`, then `npm run test:e2e` |
+
+`eShop.Web.slnf` filters `eShop.slnx` to exclude the MAUI projects. Build and
+test through the filter unless the task is specifically about `src/ClientApp`
+or `src/HybridApp`.
+
+**Verification status:** the build and test commands are the ones this
+repository's own CI runs on every pull request, so they are correct for a
+machine that satisfies the preconditions. They have not been executed on the
+current machine. State which of these you actually ran before reporting a
+result.
+
+### Running one test
+
+`global.json` selects the Microsoft.Testing.Platform runner, so `dotnet test`
+takes MTP arguments, not VSTest arguments.
+
+- `--project`, `--solution`, and `--test-modules` are mutually exclusive.
+- Arguments for the test application go after a literal `--`.
+- **Always scope to one project before filtering.** The two frameworks here
+  reject each other's filter options, so a filter combined with `--solution`
+  exits with code 5.
+
+```powershell
+dotnet test --project tests/Ordering.UnitTests/Ordering.UnitTests.csproj -- --filter "FullyQualifiedName~BuyerAggregateTest"
+```
+
+`--filter` is the MSTest option, valid for `*.UnitTests`. The xUnit v3
+`*.FunctionalTests` projects reject it; check that project's `--help` for its
+own filter options. Functional tests start containers.
+
+`TreatWarningsAsErrors` is on, so a new warning fails the build. Build output
+goes to `artifacts/`. Package versions belong in `Directory.Packages.props`,
+never in a `.csproj`.
 
 ## Conventions
-- Domain logic belongs in `*.Domain`. Never reach into a DbContext
-  from an API endpoint.
-- Integration events are contracts. Check subscriber compatibility before
-  changing their shape or meaning; identify breaking changes explicitly.
+
+- Domain logic belongs in `*.Domain`. Never reach into a DbContext from an API
+  endpoint.
+- Integration events are contracts. Before changing their shape or meaning,
+  enumerate the subscribers and identify breaking changes explicitly.
+- Distinguish in-process MediatR domain events from RabbitMQ integration
+  events. `TransactionBehavior` commits the transaction and then publishes the
+  logged integration events; that order is the outbox guarantee.
 - Migrations are generated, never hand-edited.
 
 ## Do not touch
+
 - Generated migration files under `*/Migrations/`.
 - `eShop.ServiceDefaults` without flagging the cross-cutting impact.
 
 ## Codebase navigation
+
 - For an unfamiliar business flow, read `docs/repo-map.md` for entry points,
   then verify the relevant relationships in source. The map can become stale.
 - When preserving a finding, keep its evidence and the reasoning rule that
-  should guide the next investigation. State the rule's scope and why it matters;
-  do not turn an untested hypothesis into a permanent instruction.
+  should guide the next investigation. State the rule's scope and why it
+  matters; do not turn an untested hypothesis into a permanent instruction.
+
+## Where new guidance belongs
+
+Route knowledge by when it is needed, and keep this file short.
+
+| Kind of knowledge | Destination |
+| --- | --- |
+| A navigation fact or a source path | `docs/repo-map.md` |
+| A check that applies only to one subsystem | `.github/instructions/*.instructions.md` with an `applyTo` glob |
+| A repeatable task with a fixed report format | `.github/prompts/*.prompt.md` |
+| A multi-step procedure the agent should select on its own | `.github/skills/&lt;name&gt;/SKILL.md` |
+| A persona plus a tool boundary | `.github/agents/*.agent.md` |
+| A convention every request needs | This file, or `.github/copilot-instructions.md` |
 
 ## Lesson sources
+
 - This repository is the canonical student and demo source for the lesson.
-- Keep instructor scripts, cue sheets, private diagrams, and rehearsal
-  material outside this repository. Do not commit or push them to origin.
+- Keep instructor scripts, cue sheets, private diagrams, and rehearsal material
+  outside this repository. Never commit or push them to origin.
 - Maintain the student journey in `README.md`, navigation in `docs/repo-map.md`,
-  and the leave-behind in `docs/copilot-context-engineering.html`.
-  Distributed copies are exports.
-- Keep the handout's six copyable examples aligned with the context files.
-- Keep public materials audience-neutral and free of client identities,
-  private session details, and internal metrics.
+  and the leave-behind in `docs/copilot-context-engineering.html`. Distributed
+  copies are exports.
+- Keep the handout's copyable examples aligned with the context files. Update
+  both in the same change.
+- **Never** include client identities, private session details, or internal
+  metrics in any file, filename, commit message, or diagram in this repository.
+  Public materials stay suitable for any student.
 - Verify claims against source and current product docs. Distinguish a
-  documented warning from a reproduced failure; leave application code intact
-  unless the task explicitly calls for an application change.</pre>
+  documented warning from a reproduced failure.</pre>
   </figure>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
@@ -556,6 +637,7 @@ Do not infer the existence of a class or method you have not seen.</pre>
   <figure>
     <button class="copy" type="button">Copy</button>
 <pre>---
+description: "Ordering is the DDD service. Checks for aggregate invariants, when generated IDs become available, and transaction boundaries."
 applyTo: "src/Ordering.API/**,src/Ordering.Domain/**,src/Ordering.Infrastructure/**"
 ---
 
@@ -586,6 +668,7 @@ When asked to explain or modify an ordering flow, always report:
   <figure>
     <button class="copy" type="button">Copy</button>
 <pre>---
+description: "Two test frameworks split by project suffix. Confirms which one applies before a test is written."
 applyTo: "tests/**"
 ---
 
@@ -628,7 +711,10 @@ Regardless of framework:
   <figure>
     <button class="copy" type="button">Copy</button>
 <pre>---
+name: trace-flow
 agent: agent
+tools: ['search', 'read']
+argument-hint: 'The business flow to trace, for example: order placement'
 description: Trace a request across service boundaries and report every
   place correctness depends on execution order.
 ---
@@ -725,6 +811,104 @@ Lead with the highest-severity finding. For each finding, give the file,
 the mechanism, and what breaks in production. Do not soften a real hazard
 into a style suggestion.</pre>
   </figure>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="tier-5">
+  <h2>Tier 5: bounded by tools</h2>
+  <p class="lede">A custom agent pairs a persona with a capability boundary. The <code>tools</code> list
+  decides what the agent can do at all, so a read-only investigation stops depending on the model
+  choosing to comply. Omitting <code>target</code> makes the agent available in both VS Code and on
+  GitHub.</p>
+
+  <p class="path">.github/agents/flow-investigator.agent.md</p>
+  <figure>
+    <button class="copy" type="button">Copy</button>
+<pre>---
+name: flow-investigator
+description: Read-only investigation of a business flow across eShop services. Traces the path, names every boundary, quotes existing REVIEW/TODO/HACK/FIXME comments, and separates what the source proves from what is inferred. Use when asked how something works rather than to change it.
+tools: ['search', 'read']
+---
+
+# Flow investigator
+
+You establish how a flow works. You do not change it.
+
+## Why this agent has no edit tools
+
+The `tools` list grants only the `search` and `read` tool sets. The `edit` and
+`execute` tool sets are absent, so editing a file or running the application is
+not available to you. This is a structural guardrail, not a request. If a task
+needs a change, report what you found and say that a change is out of scope for
+this agent.
+
+## Method
+
+1. **Orient.** Read the relevant rows of `docs/repo-map.md` for entry points.
+   Treat the map as a starting point that can be stale, never as proof.
+2. **Trace.** Follow callers, handlers, and service registrations in source.
+   A `WithReference` in the AppHost establishes a connection, not a behavior.
+3. **Separate the two event mechanisms.** In-process MediatR domain events and
+   RabbitMQ integration events are easy to conflate. Say which one carries a
+   given hop.
+4. **Report the boundaries.** Name every service-to-service transition and what
+   carries the data across it.
+5. **Quote the warnings.** Reproduce every `REVIEW`, `TODO`, `HACK`, and `FIXME`
+   comment on the path, verbatim. If there are none, say so explicitly.
+6. **Mark the limits.** Distinguish a documented warning from a reproduced
+   failure. Label an untested consequence as predicted. Name what you looked
+   for and could not find.
+
+## Output
+
+Use the six sections defined in `.github/prompts/trace-flow.prompt.md`: Path,
+Boundaries, Order dependencies, Existing warnings, What I could not determine,
+and What to preserve. Do not save anything to a permanent file; propose it for
+review instead.
+
+## Relationship to the other customizations
+
+This agent supplies the persona and the tool boundary. The prompt file supplies
+the report format. The path-scoped instructions under `.github/instructions/`
+still apply when the files you read match their `applyTo` globs. Prefer
+composing them over restating them here.</pre>
+  </figure>
+
+  <table>
+    <thead><tr><th>Approach</th><th>How &quot;do not edit&quot; is enforced</th></tr></thead>
+    <tbody>
+      <tr><td>Instruction in the prompt</td><td>The model is asked to comply.</td></tr>
+      <tr class="charged"><td>Custom agent with a restricted <code>tools</code> list</td><td>The capability is absent.</td></tr>
+    </tbody>
+  </table>
+  <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
+</section>
+
+<!-- ============================================================ -->
+<section id="surface-support">
+  <h2>Which surface honors which file</h2>
+  <p class="lede">This is the assumption that costs the most when it is wrong. A team standardizes on a
+  prompt file, then finds it does nothing during code review on GitHub. Check support before you build
+  a workflow on a mechanism.</p>
+  <table>
+    <thead><tr><th>Mechanism</th><th>VS Code</th><th>GitHub.com</th><th>Copilot CLI</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">.github/copilot-instructions.md</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td class="mono">.github/instructions/*.instructions.md</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td class="mono">AGENTS.md</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td class="mono">.github/skills/&lt;name&gt;/SKILL.md</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td class="mono">.github/agents/*.agent.md</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+      <tr class="charged"><td class="mono">.github/prompts/*.prompt.md</td><td>Yes</td><td><strong>No</strong></td><td><strong>No</strong></td></tr>
+    </tbody>
+  </table>
+  <p>Path-scoped instructions are the most portable mechanism, which is a good reason to prefer them
+  over crowding the always-on file. Prompt files are the least portable, so treat <code>/trace-flow</code>
+  as an editor convenience and keep durable rules in instructions, skills, or the agent.</p>
+  <div class="caution"><p><strong>Support changes.</strong> Confirm against the current
+  <a href="https://docs.github.com/en/copilot/reference/custom-instructions-support">support matrix</a> and
+  <a href="https://docs.github.com/en/copilot/reference/customization-cheat-sheet">customization cheat sheet</a>
+  rather than trusting this table indefinitely.</p></div>
   <p class="totop"><a href="#top"><span aria-hidden="true">&uarr;</span> Back to top</a></p>
 </section>
 

@@ -1,4 +1,5 @@
 ---
+description: "Two test frameworks split by project suffix. Confirms which one applies before a test is written."
 applyTo: "tests/**"
 ---
 

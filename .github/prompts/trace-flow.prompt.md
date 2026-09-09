@@ -1,5 +1,8 @@
 ---
+name: trace-flow
 agent: agent
+tools: ['search', 'read']
+argument-hint: 'The business flow to trace, for example: order placement'
 description: Trace a request across service boundaries and report every
   place correctness depends on execution order.
 ---

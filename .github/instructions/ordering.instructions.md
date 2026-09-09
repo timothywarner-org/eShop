@@ -1,4 +1,5 @@
 ---
+description: "Ordering is the DDD service. Checks for aggregate invariants, when generated IDs become available, and transaction boundaries."
 applyTo: "src/Ordering.API/**,src/Ordering.Domain/**,src/Ordering.Infrastructure/**"
 ---
 

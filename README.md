@@ -6,7 +6,7 @@ This is Tim Warner's teaching fork of [dotnet/eShop](https://github.com/dotnet/e
 
 The lesson follows one loop: **explore → verify → preserve → reuse**. Copilot helps you find and explain code. You check its explanation against the source, then record the useful knowledge in instructions, prompts, and skills that travel with the repository.
 
-**Start here:** [Use the repository map](docs/repo-map.md) · [Try the investigation](#try-the-investigation) · [Read the HTML leave-behind](docs/copilot-context-engineering.html) · [See the context files](#the-context-layer) · [Run eShop](docs/eshop-application.md)
+**Start here:** [Use the repository map](docs/repo-map.md) · [Try the investigation](#try-the-investigation) · [Five prompts to try](docs/try-these-prompts.md) · [Read the HTML leave-behind](docs/copilot-context-engineering.html) · [See the context files](#the-context-layer) · [Run eShop](docs/eshop-application.md)
 
 ## What you will learn
 
@@ -135,7 +135,7 @@ Check each entry against the source before saving it. **The next chat should inh
 
 ## The context layer
 
-These six files are the teaching layer. Other skills inherited from upstream support application development and are outside the core exercise.
+These seven files are the teaching layer. Other skills inherited from upstream support application development and are outside the core exercise.
 
 | Mechanism | File | Purpose in this lesson |
 | --- | --- | --- |
@@ -145,8 +145,24 @@ These six files are the teaching layer. Other skills inherited from upstream sup
 | **Path-scoped instructions** | [tests.instructions.md](.github/instructions/tests.instructions.md) | Distinguish this repository's unit and functional test conventions. |
 | **Reusable prompt** | [trace-flow.prompt.md](.github/prompts/trace-flow.prompt.md) | Make the investigation method repeatable through `/trace-flow`. |
 | **Agent skill** | [order-flow-audit/SKILL.md](.github/skills/order-flow-audit/SKILL.md) | Package the Ordering review procedure for relevant investigations and changes. |
+| **Custom agent** | [flow-investigator.agent.md](.github/agents/flow-investigator.agent.md) | Pair the investigation persona with a tool boundary: granting only `search` and `read` removes the ability to edit or run anything. |
 
 Think in terms of **when content is needed**. Keep repository guidance concise, scope subsystem rules to the relevant paths, invoke prompts for repeatable tasks, and use skills for procedures. Skills expose discovery metadata before their full instructions load. Client support, settings, and policies affect behavior, so verify which customizations were used. [Custom instructions](https://code.visualstudio.com/docs/agent-customization/custom-instructions), [agent skills](https://code.visualstudio.com/docs/agent-customization/agent-skills)
+
+### Not every mechanism works on every surface
+
+**This is the assumption that costs the most when it is wrong.** A team standardizes on a prompt file, then discovers it does nothing during code review on GitHub. Check the support matrix before you build a workflow on a mechanism.
+
+| Mechanism | VS Code | GitHub.com | Copilot CLI |
+| --- | --- | --- | --- |
+| `.github/copilot-instructions.md` | Yes | Yes | Yes |
+| `.github/instructions/*.instructions.md` | Yes | Yes | Yes |
+| `AGENTS.md` | Yes | Yes | Yes |
+| `.github/skills/<name>/SKILL.md` | Yes | Yes | Yes |
+| `.github/agents/*.agent.md` | Yes | Yes | Yes |
+| `.github/prompts/*.prompt.md` | Yes | **No** | **No** |
+
+Path-scoped instructions are the most portable mechanism, which is a good reason to prefer them over stuffing detail into the always-on file. Prompt files are the least portable, so treat `/trace-flow` as an IDE convenience and keep the durable rules in instructions, skills, or the agent. Support changes; confirm against the current [support matrix](https://docs.github.com/en/copilot/reference/custom-instructions-support) and [customization cheat sheet](https://docs.github.com/en/copilot/reference/customization-cheat-sheet) rather than trusting this table indefinitely.
 
 ## Apply the method to a codebase you do not know
 
@@ -161,7 +177,7 @@ For a transfer exercise, use `/trace-flow` to investigate **where the basket's d
 
 ## The HTML leave-behind
 
-**[docs/copilot-context-engineering.html](docs/copilot-context-engineering.html)** is the canonical reference handout. It includes the six copyable files, repository-map guidance, the fact-and-reasoning-rule method, context-management guidance, optional Copilot Spaces and CLI material, and links to product documentation.
+**[docs/copilot-context-engineering.html](docs/copilot-context-engineering.html)** is the canonical reference handout. It includes the seven copyable files, the surface-support matrix, repository-map guidance, the fact-and-reasoning-rule method, context-management guidance, optional Copilot Spaces and CLI material, and links to product documentation.
 
 GitHub displays HTML source rather than running it. After cloning or downloading this repository, open the file in a browser. It is self-contained for offline reading; its documentation links need an internet connection. Browser printing is supported. You can also download the raw HTML file from GitHub and open it locally.
 
